@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
@@ -44,7 +45,9 @@ _SCHEMA = (
 
 class SqlitePageRepository:
     def __init__(self, path: Path) -> None:
-        self._conn = sqlite3.connect(Path(path), isolation_level=None)
+        # MCP runs tools on a worker thread. One lock keeps the shared connection serial.
+        self._lock = threading.Lock()
+        self._conn = sqlite3.connect(Path(path), isolation_level=None, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA foreign_keys=ON")
@@ -81,6 +84,10 @@ class SqlitePageRepository:
         return self._immediate(write)
 
     def get_version(self, page_id: str, number: int | None = None) -> StoredVersion:
+        with self._lock:
+            return self._get_version(page_id, number)
+
+    def _get_version(self, page_id: str, number: int | None = None) -> StoredVersion:
         row = self._conn.execute(
             f"""
             SELECT {_PAGE_COLUMNS}
@@ -103,6 +110,10 @@ class SqlitePageRepository:
         return _stored(row)
 
     def list_versions(self, page_id: str) -> tuple[StoredVersion, ...]:
+        with self._lock:
+            return self._list_versions(page_id)
+
+    def _list_versions(self, page_id: str) -> tuple[StoredVersion, ...]:
         if self._page_row(page_id) is None:
             raise PageNotFound(f"page {page_id} not found")
         rows = self._conn.execute(
@@ -118,6 +129,10 @@ class SqlitePageRepository:
         return tuple(_stored(row) for row in rows)
 
     def list_pages(self) -> tuple[StoredVersion, ...]:
+        with self._lock:
+            return self._list_pages()
+
+    def _list_pages(self) -> tuple[StoredVersion, ...]:
         rows = self._conn.execute(
             f"""
             SELECT {_PAGE_COLUMNS}
@@ -144,6 +159,10 @@ class SqlitePageRepository:
             self._conn.execute(statement)
 
     def _immediate(self, write: Callable[[], _T]) -> _T:
+        with self._lock:
+            return self._immediate_locked(write)
+
+    def _immediate_locked(self, write: Callable[[], _T]) -> _T:
         self._conn.execute("BEGIN IMMEDIATE")
         try:
             result = write()
