@@ -57,7 +57,7 @@ Critical path: `scaffold` → `domain-edits` → `app-service` → `bootstrap` �
 
 ## Wave 0
 
-- [ ] **scaffold**
+- [x] **scaffold** `9a47362`
   - Owns: `pyproject.toml` dependencies, `pagehost/` package dirs, `pagehost/domain/ports.py`, `pagehost/domain/errors.py`, `pagehost/domain/models.py`, `pagehost/config.py`, `tests/test_architecture.py`, `tests/test_settings.py`, unmodified `pagehost.css` as package data.
   - Exit: `pytest tests/test_architecture.py tests/test_settings.py`
   - Pass means layers import legally (§2.3), and `Settings(data_dir, token, url_template)` exposes `site_root`. Port and service signatures are frozen here. The app accepts a bearer token and does not enforce it.
