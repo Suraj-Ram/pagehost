@@ -15,6 +15,7 @@ def test_publish_is_readable_through_current(tmp_path: Path):
     current = tmp_path / "alpha" / "current"
     assert os.readlink(current) == "v1"
     assert (current / "index.html").read_text(encoding="utf-8") == "<p>one</p>"
+    assert (tmp_path / "alpha" / "v1" / "index.html").stat().st_mode & 0o777 == 0o644
     assert {path.name for path in (tmp_path / "alpha" / "v1").iterdir()} == {"index.html"}
 
 
@@ -78,6 +79,7 @@ def test_install_assets_writes_each_name_under_assets(tmp_path: Path):
     publisher.install_assets({"pagehost.css": b"updated"})
 
     assert (tmp_path / "_assets" / "pagehost.css").read_bytes() == b"updated"
+    assert (tmp_path / "_assets" / "pagehost.css").stat().st_mode & 0o777 == 0o644
     assert (tmp_path / "_assets" / "mark.bin").read_bytes() == b"\xff"
 
 

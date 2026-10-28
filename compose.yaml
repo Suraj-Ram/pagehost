@@ -1,0 +1,52 @@
+# Pagehost: the app container is the MCP server. Nginx only serves published pages.
+#
+#   PAGEHOST_TOKEN=dev-token docker compose up --build
+#
+# Agents connect to the published MCP port (http://localhost:8080/mcp by default).
+# Page links use PAGEHOST_BASE_URL, which is the nginx origin.
+
+name: pagehost
+
+services:
+  pagehost:
+    build: .
+    image: pagehost:local
+    environment:
+      PAGEHOST_TOKEN: ${PAGEHOST_TOKEN:?set PAGEHOST_TOKEN}
+      PAGEHOST_BASE_URL: ${PAGEHOST_BASE_URL:-http://localhost:${PAGEHOST_PORT:-8090}}
+      PAGEHOST_DATA_DIR: /data
+    ports:
+      - "${PAGEHOST_MCP_PORT:-8080}:8080"
+    volumes:
+      - pagehost-data:/data
+      - pagehost-sites:/data/sites
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('127.0.0.1', 8080), 2); s.close()"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.28-alpine
+    depends_on:
+      pagehost:
+        condition: service_healthy
+    ports:
+      - "${PAGEHOST_PORT:-8090}:80"
+    volumes:
+      - pagehost-sites:/srv/pages:ro
+      - ./deploy/nginx/pages.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/nginx/pagehost-security.conf:/etc/nginx/snippets/pagehost-security.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/_assets/pagehost.css"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  pagehost-data:
+  pagehost-sites:

@@ -48,6 +48,9 @@ def _write_bytes(destination: Path, payload: bytes) -> None:
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
+        # mkstemp is owner-only. Nginx runs as a different user and mounts this tree read-only.
+        # TODO investigate the best way to handle this
+        os.chmod(temporary, 0o644)
         os.replace(temporary, destination)
     except BaseException:
         temporary.unlink(missing_ok=True)

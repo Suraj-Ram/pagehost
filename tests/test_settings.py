@@ -44,3 +44,52 @@ def test_from_env_requires_a_token_and_applies_defaults(tmp_path: Path, monkeypa
 def test_url_template_must_contain_the_id_placeholder(tmp_path: Path):
     with pytest.raises(ValueError, match="{id}"):
         Settings(data_dir=tmp_path, token="t", url_template="https://pages.example/")
+
+
+def test_base_url_is_the_origin_pages_are_served_from():
+    settings = Settings.from_env(
+        {
+            "PAGEHOST_TOKEN": "dev-token",
+            "PAGEHOST_BASE_URL": "https://pages.example.com/",
+        }
+    )
+
+    assert settings.url_template == "https://pages.example.com/p/{id}/"
+
+
+def test_base_url_keeps_a_non_default_port():
+    settings = Settings.from_env(
+        {
+            "PAGEHOST_TOKEN": "dev-token",
+            "PAGEHOST_BASE_URL": "http://localhost:8080",
+        }
+    )
+
+    assert settings.url_template == "http://localhost:8080/p/{id}/"
+
+
+def test_base_url_and_url_template_cannot_both_be_set():
+    with pytest.raises(ValueError, match="PAGEHOST_BASE_URL"):
+        Settings.from_env(
+            {
+                "PAGEHOST_TOKEN": "dev-token",
+                "PAGEHOST_BASE_URL": "https://pages.example.com",
+                "PAGEHOST_URL_TEMPLATE": "https://{id}.pages.example.com/",
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "pages.example.com",
+        "ftp://pages.example.com",
+        "https://pages.example.com/docs",
+        "https://pages.example.com?x=1",
+        "https://pages.example.com#top",
+        "https://user:secret@pages.example.com",
+    ],
+)
+def test_base_url_must_be_an_origin(base_url: str):
+    with pytest.raises(ValueError, match="PAGEHOST_BASE_URL"):
+        Settings.from_env({"PAGEHOST_TOKEN": "dev-token", "PAGEHOST_BASE_URL": base_url})
