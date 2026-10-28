@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from acceptance.cases import PUBLISH_A_PAGE
+from acceptance.cases import SCENARIOS
 from acceptance.semantic import semantic_view
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,12 +62,13 @@ def test_inline_marks_survive_as_text():
     )
 
 
-def test_publish_scenario_matches_the_rendered_reference_page():
-    html = (RENDERED / "publish-a-page.html").read_text(encoding="utf-8")
+@pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda scenario: scenario.name)
+def test_scenario_matches_the_rendered_reference_page(scenario):
+    html = (RENDERED / f"{scenario.name}.html").read_text(encoding="utf-8")
     view = semantic_view(html)
 
-    assert view.title == PUBLISH_A_PAGE.title
-    assert view.blocks == PUBLISH_A_PAGE.blocks
+    assert view.title == scenario.title
+    assert view.blocks == scenario.blocks
 
 
 def test_rendered_pages_match_the_build_kit_snapshot(rendered_page: Path):
