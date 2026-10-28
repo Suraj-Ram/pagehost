@@ -10,3 +10,7 @@ After a tangible, testable part of the system is built, make one small atomic co
 - A commit contains one part. Leave unrelated work for its own commit.
 - Name the commit for why the slice exists.
 - Force push, hard reset, and skipping hooks still require an explicit request.
+
+## Implementation plan
+
+The task list and DAG are in `IMPLEMENTATION.md`. When you finish a task, mark its checkbox only after its exit command passes, and append the commit hash. Mark only the task you own.
