@@ -1,0 +1,56 @@
+name: markdown-feature-tour
+description: >
+  The supported authoring features render as the structures a reader expects: a quote, a table,
+  strikethrough, a code block, a callout and a collapsible section.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Feature tour
+      content: |-
+        ## Tour
+
+        > Measure twice, cut once.
+
+        | Region | Signups |
+        |---|---|
+        | North | 120 |
+        | South | 85 |
+
+        ~~old~~ new text
+
+        ```python
+        print("hello")
+        ```
+
+        :::callout Heads up
+        Back up before migrating.
+        :::
+
+        :::details More info
+        Hidden **detail** text.
+        :::
+    expect:
+      version: 1
+      warnings: {absent: true}
+final:
+  page: page
+  snapshot:
+    title: Feature tour
+    blocks:
+      - h2: Tour
+      - blockquote: Measure twice, cut once.
+      - table:
+          head: [Region, Signups]
+          rows:
+            - [North, "120"]
+            - [South, "85"]
+      - p: ~~old~~ new text
+      - pre: print("hello")
+      - callout:
+          kind: note
+          title: Heads up
+          text: Back up before migrating.
+      - details:
+          summary: More info
+          text: Hidden **detail** text.

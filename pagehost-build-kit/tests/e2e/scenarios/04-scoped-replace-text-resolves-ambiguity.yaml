@@ -1,0 +1,46 @@
+name: scoped-replace-text-resolves-ambiguity
+description: >
+  A phrase that appears twice cannot be edited blindly: the call fails, changes nothing, and
+  says where each occurrence is. Scoping the same edit to one section makes it unambiguous.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Status board
+      content: |-
+        ## Frontend
+
+        Status: in progress
+
+        ## Backend
+
+        Status: in progress
+  - call: replace_text
+    args: {id: "${page.id}", old: "Status: in progress", new: "Status: done"}
+    expect_error:
+      code: edit_conflict
+      details:
+        matches: 2
+        candidates: {length: 2, contains: {section: backend}}
+        current_source: {absent: true}
+  - call: replace_text
+    args: {id: "${page.id}", section: backend, old: "Status: in progress", new: "Status: done"}
+    expect: {version: 2}
+final:
+  page: page
+  versions: 2
+  source: |-
+    ## Frontend
+
+    Status: in progress
+
+    ## Backend
+
+    Status: done
+  snapshot:
+    title: Status board
+    blocks:
+      - h2: Frontend
+      - p: "Status: in progress"
+      - h2: Backend
+      - p: "Status: done"

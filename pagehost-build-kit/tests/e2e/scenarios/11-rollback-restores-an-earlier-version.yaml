@@ -1,0 +1,43 @@
+name: rollback-restores-an-earlier-version
+description: >
+  Rolling back does not rewind history: it adds a new version whose content equals the chosen
+  one. The served page is the old page again and the history now has four entries.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Project plan
+      content: |-
+        ## Plan
+
+        - Ship the beta
+  - call: append_page
+    args:
+      id: ${page.id}
+      content: |-
+        ## Risks
+
+        - Vendor delay
+    expect: {version: 2}
+  - call: replace_text
+    args: {id: "${page.id}", old: "Ship the beta", new: "Ship GA"}
+    expect: {version: 3}
+  - call: rollback_page
+    args: {id: "${page.id}", to_version: 1}
+    expect: {version: 4}
+  - call: list_versions
+    args: {id: "${page.id}"}
+    expect: {length: 4}
+final:
+  page: page
+  versions: 4
+  source: |-
+    ## Plan
+
+    - Ship the beta
+  snapshot:
+    title: Project plan
+    blocks:
+      - h2: Plan
+      - ul: [Ship the beta]
+  page_text_excludes: [Vendor delay, Ship GA]

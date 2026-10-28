@@ -1,0 +1,42 @@
+name: replace-the-whole-page-and-rename-it
+description: >
+  A full rewrite can also change the title. Leaving the title out keeps the current one.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Handbook
+      content: |-
+        ## Old content
+
+        To be replaced.
+  - call: replace_page
+    args:
+      id: ${page.id}
+      title: Handbook v2
+      content: |-
+        ## Fresh start
+
+        Everything is new.
+    expect: {version: 2}
+  - call: replace_page
+    args:
+      id: ${page.id}
+      content: |-
+        ## Third draft
+
+        Only the body changes.
+    expect: {version: 3}
+final:
+  page: page
+  versions: 3
+  source: |-
+    ## Third draft
+
+    Only the body changes.
+  snapshot:
+    title: Handbook v2
+    blocks:
+      - h2: Third draft
+      - p: Only the body changes.
+  page_text_excludes: [Old content, Fresh start]

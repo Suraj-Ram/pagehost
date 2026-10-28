@@ -1,0 +1,75 @@
+name: a-status-page-built-from-components
+status: planned
+description: >
+  SPEC FOR THE NEXT STEP. A status page written with the planned components: a warning callout,
+  a table of contents, a metrics row with statuses, a dated timeline with statuses, and a table
+  from compact rows. Expected to fail until those components are built; then flip to `ready`.
+  (A bare `:::toc` line is opened and closed like every other block.)
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Q4 launch status
+      content: |-
+        ## Summary
+
+        :::callout warning Latency regression
+        Staging p95 is above target; the fix is in review.
+        :::
+
+        :::toc
+        :::
+
+        ## Metrics
+
+        :::stats
+        Revenue | $5.2M | +12% | done
+        Latency p95 | 340 ms | +40 ms | blocked
+        :::
+
+        ## Timeline
+
+        :::timeline
+        2026-10-01 | Beta opens | done
+        2026-11-15 | General availability | active
+        :::
+
+        ## Regions
+
+        :::table
+        Region,Signups,Conversion
+        North America,5120,3.4%
+        Europe,3860,2.9%
+        :::
+    expect:
+      version: 1
+      warnings: {absent: true}
+final:
+  page: page
+  snapshot:
+    title: Q4 launch status
+    blocks:
+      - h2: Summary
+      - callout:
+          kind: warning
+          title: Latency regression
+          text: Staging p95 is above target; the fix is in review.
+      - toc:
+          - "Summary -> #summary"
+          - "Metrics -> #metrics"
+          - "Timeline -> #timeline"
+          - "Regions -> #regions"
+      - h2: Metrics
+      - stats:
+          - {label: Revenue, value: "$5.2M", delta: "+12%", status: done}
+          - {label: Latency p95, value: 340 ms, delta: "+40 ms", status: blocked}
+      - h2: Timeline
+      - timeline:
+          - {when: "2026-10-01", title: Beta opens, status: done}
+          - {when: "2026-11-15", title: General availability, status: active}
+      - h2: Regions
+      - table:
+          head: [Region, Signups, Conversion]
+          rows:
+            - [North America, "5120", 3.4%]
+            - [Europe, "3860", 2.9%]

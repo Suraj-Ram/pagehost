@@ -1,0 +1,48 @@
+name: a-near-miss-edit-points-at-the-right-line
+description: >
+  When the text to replace is not found (a slip in wording), the error names the closest line
+  and its section instead of dumping the page, so the next attempt can succeed without a re-read.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Operations guide
+      content: |-
+        ## Release process
+
+        Deployments freeze on Friday afternoons.
+
+        ## Support
+
+        Escalate urgent issues to the on-call engineer.
+  - call: replace_text
+    args: {id: "${page.id}", old: "freeze on Fridays afternoons", new: "freeze on Thursday evenings"}
+    expect_error:
+      code: edit_conflict
+      details:
+        matches: 0
+        candidates:
+          min_length: 1
+          contains: {section: release-process, snippet: {contains: "freeze on Friday"}}
+        current_source: {absent: true}
+  - call: replace_text
+    args: {id: "${page.id}", section: release-process, old: "freeze on Friday afternoons", new: "freeze on Thursday evenings"}
+    expect: {version: 2}
+final:
+  page: page
+  versions: 2
+  source: |-
+    ## Release process
+
+    Deployments freeze on Thursday evenings.
+
+    ## Support
+
+    Escalate urgent issues to the on-call engineer.
+  snapshot:
+    title: Operations guide
+    blocks:
+      - h2: Release process
+      - p: Deployments freeze on Thursday evenings.
+      - h2: Support
+      - p: Escalate urgent issues to the on-call engineer.

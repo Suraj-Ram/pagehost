@@ -1,0 +1,52 @@
+name: duplicate-headings-get-numbered-section-ids
+description: >
+  Two headings with the same title are told apart by number: the first is `option`, the second
+  `option-2`. Reads and edits scoped to a section hit the right one.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Options
+      content: |-
+        ## Option
+
+        Choose A.
+
+        ## Option
+
+        Choose B.
+  - call: read_page
+    args: {id: "${page.id}", section: option-2}
+    expect:
+      section: option-2
+      source: |-
+        ## Option
+
+        Choose B.
+  - call: replace_text
+    args: {id: "${page.id}", section: option-2, old: "Choose B.", new: "Choose C."}
+    expect: {version: 2}
+  - call: read_page
+    args: {id: "${page.id}", section: option}
+    expect:
+      source: |-
+        ## Option
+
+        Choose A.
+final:
+  page: page
+  source: |-
+    ## Option
+
+    Choose A.
+
+    ## Option
+
+    Choose C.
+  snapshot:
+    title: Options
+    blocks:
+      - h2: Option
+      - p: Choose A.
+      - h2: Option
+      - p: Choose C.

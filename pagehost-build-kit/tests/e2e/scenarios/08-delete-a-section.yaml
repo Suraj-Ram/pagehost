@@ -1,0 +1,47 @@
+name: delete-a-section
+description: >
+  Deleting a section removes its heading, its text and its subsections. What was inside it can
+  no longer be addressed.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Project plan
+      content: |-
+        ## Plan
+
+        - Ship the beta
+
+        ## Risks
+
+        - Vendor delay
+
+        ### Mitigation
+
+        Use two vendors.
+
+        ## Notes
+
+        Last updated by the team.
+  - call: delete_section
+    args: {id: "${page.id}", section: risks}
+    expect: {version: 2}
+  - call: delete_section
+    args: {id: "${page.id}", section: mitigation}
+    expect_error: {code: section_not_found}
+  - call: delete_section
+    args: {id: "${page.id}", section: notes}
+    expect: {version: 3}
+final:
+  page: page
+  versions: 3
+  source: |-
+    ## Plan
+
+    - Ship the beta
+  snapshot:
+    title: Project plan
+    blocks:
+      - h2: Plan
+      - ul: [Ship the beta]
+  page_text_excludes: [Vendor delay, Mitigation, Last updated]

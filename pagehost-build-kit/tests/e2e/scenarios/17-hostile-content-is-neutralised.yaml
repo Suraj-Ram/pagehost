@@ -1,0 +1,35 @@
+name: hostile-content-is-neutralised
+description: >
+  Whatever an author (or an agent that read untrusted text) writes, the served page can never
+  run code or load anything from elsewhere. Ordinary text around it survives, and the caller is
+  told that something was not supported.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Untrusted notes
+      content: |-
+        ## Notes
+
+        <script>alert(1)</script>
+
+        [click me](javascript:alert(1))
+
+        <img src=x onerror=alert(1)>
+
+        ![logo](https://evil.example/logo.png)
+
+        <a href="javascript:alert(1)" onclick="steal()">link</a>
+
+        Plain text survives.
+    expect:
+      version: 1
+      warnings: {min_length: 1}
+final:
+  page: page
+  page_text_contains: [Plain text survives.]
+  snapshot:
+    title: Untrusted notes
+    blocks_include:
+      - h2: Notes
+      - p: Plain text survives.

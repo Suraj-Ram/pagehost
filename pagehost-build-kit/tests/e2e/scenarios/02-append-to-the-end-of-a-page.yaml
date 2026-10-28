@@ -1,0 +1,44 @@
+name: append-to-the-end-of-a-page
+description: >
+  Appending needs no read and no anchor. The new block lands after everything else, and the
+  result is lean: a version number and a change summary, not the page or its URL.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Release notes
+      content: |-
+        ## v1.0
+
+        - First release
+  - call: append_page
+    args:
+      id: ${page.id}
+      content: |-
+        ## v1.1
+
+        - Bug fixes
+    expect:
+      version: 2
+      changed: {matches: '^\+\d+/-\d+$'}
+      url: {absent: true}
+      source: {absent: true}
+      warnings: {absent: true}
+final:
+  page: page
+  versions: 2
+  source: |-
+    ## v1.0
+
+    - First release
+
+    ## v1.1
+
+    - Bug fixes
+  snapshot:
+    title: Release notes
+    blocks:
+      - h2: v1.0
+      - ul: [First release]
+      - h2: v1.1
+      - ul: [Bug fixes]

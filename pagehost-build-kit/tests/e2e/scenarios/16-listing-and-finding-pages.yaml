@@ -1,0 +1,31 @@
+name: listing-and-finding-pages
+description: >
+  Pages can be found by a title fragment (case-insensitively), the result reports the total
+  even when the list is cut short, and each entry has what is needed to link to it.
+steps:
+  - call: publish_page
+    args: {title: "Roadmap ${unique}", content: "## One"}
+  - call: publish_page
+    args: {title: "Budget ${unique}", content: "## Two"}
+  - call: publish_page
+    args: {title: "Roadmap ${unique} v2", content: "## Three"}
+  - call: list_pages
+    args: {query: "roadmap ${unique}"}
+    expect:
+      total: 2
+      pages: {length: 2}
+  - call: list_pages
+    args: {query: "Roadmap ${unique}", limit: 1}
+    expect:
+      total: 2
+      pages: {length: 1}
+  - call: list_pages
+    args: {query: "BUDGET ${unique}"}
+    expect:
+      total: 1
+      pages:
+        contains:
+          title: "Budget ${unique}"
+          version: 1
+          id: {any: true}
+          url: {matches: "^https?://"}

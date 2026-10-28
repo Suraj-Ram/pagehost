@@ -1,0 +1,45 @@
+name: rereading-an-unchanged-page-is-cheap
+description: >
+  A caller that remembers the version it last saw can ask again with `since`. If nothing changed
+  it gets a tiny "unchanged" answer instead of the text; if the page moved on, it gets the text.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Notes
+      content: |-
+        ## A
+
+        text
+  - call: read_page
+    args: {id: "${page.id}"}
+    expect:
+      version: 1
+      source: |-
+        ## A
+
+        text
+  - call: read_page
+    args: {id: "${page.id}", since: 1}
+    expect:
+      version: 1
+      unchanged: true
+      source: {absent: true}
+  - call: append_page
+    args: {id: "${page.id}", content: "more text"}
+    expect: {version: 2}
+  - call: read_page
+    args: {id: "${page.id}", since: 1}
+    expect:
+      version: 2
+      source: {contains: "more text"}
+      unchanged: {absent: true}
+final:
+  page: page
+  versions: 2
+  snapshot:
+    title: Notes
+    blocks:
+      - h2: A
+      - p: text
+      - p: more text

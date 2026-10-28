@@ -1,0 +1,113 @@
+name: weekly-status-report-lifecycle
+description: >
+  A realistic session over one page: publish a weekly report, update a table cell, add a note
+  under the table, resolve a risk, and record a decision. Five versions later the page reads as
+  a clean current report.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Weekly status
+      content: |-
+        ## Summary
+
+        Shipping on track for the March release.
+
+        ## Metrics
+
+        | Metric | Value |
+        |---|---|
+        | Signups | 120 |
+        | Latency p95 | 340 ms |
+
+        ## Risks
+
+        - Vendor delay
+        - Staffing gap
+
+        ## Next steps
+
+        1. Finish the pricing page
+        2. Review the launch checklist
+  - call: replace_text
+    args:
+      id: ${page.id}
+      section: metrics
+      old: "| Latency p95 | 340 ms |"
+      new: "| Latency p95 | 290 ms |"
+    expect: {version: 2}
+  - call: append_page
+    args: {id: "${page.id}", section: metrics, content: "Latency improved after the cache fix."}
+    expect: {version: 3}
+  - call: replace_section
+    args:
+      id: ${page.id}
+      section: risks
+      content: |-
+        ## Risks
+
+        - Staffing gap
+    expect: {version: 4}
+  - call: append_page
+    args:
+      id: ${page.id}
+      content: |-
+        ## Decisions
+
+        Ship the March release as planned.
+    expect: {version: 5}
+  - call: read_page
+    args: {id: "${page.id}", section: risks}
+    expect:
+      source: |-
+        ## Risks
+
+        - Staffing gap
+final:
+  page: page
+  versions: 5
+  source: |-
+    ## Summary
+
+    Shipping on track for the March release.
+
+    ## Metrics
+
+    | Metric | Value |
+    |---|---|
+    | Signups | 120 |
+    | Latency p95 | 290 ms |
+
+    Latency improved after the cache fix.
+
+    ## Risks
+
+    - Staffing gap
+
+    ## Next steps
+
+    1. Finish the pricing page
+    2. Review the launch checklist
+
+    ## Decisions
+
+    Ship the March release as planned.
+  snapshot:
+    title: Weekly status
+    blocks:
+      - h2: Summary
+      - p: Shipping on track for the March release.
+      - h2: Metrics
+      - table:
+          head: [Metric, Value]
+          rows:
+            - [Signups, "120"]
+            - [Latency p95, 290 ms]
+      - p: Latency improved after the cache fix.
+      - h2: Risks
+      - ul: [Staffing gap]
+      - h2: Next steps
+      - ol: [Finish the pricing page, Review the launch checklist]
+      - h2: Decisions
+      - p: Ship the March release as planned.
+  page_text_excludes: [Vendor delay, 340 ms]

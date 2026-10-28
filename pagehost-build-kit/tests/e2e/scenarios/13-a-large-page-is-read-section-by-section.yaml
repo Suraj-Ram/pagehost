@@ -1,0 +1,58 @@
+name: a-large-page-is-read-section-by-section
+description: >
+  Reading a large page does not return its whole text. It returns an outline of section ids,
+  from which one section can be read and edited. The rest of the page is untouched.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Large handbook
+      content:
+        gen: repeat
+        count: 12
+        var: s
+        join: "\n\n"
+        template:
+          gen: concat
+          parts:
+            - "## Section {s}\n\n"
+            - gen: repeat
+              count: 25
+              var: j
+              join: "\n"
+              template: "- Item {s}.{j}: the quick brown fox jumps over the lazy dog and keeps running"
+  - call: read_page
+    args: {id: "${page.id}"}
+    expect:
+      version: 1
+      source: {absent: true}
+      outline:
+        min_length: 12
+        contains: {matches: '^section-4\b'}
+  - call: read_page
+    args: {id: "${page.id}", section: section-4}
+    expect:
+      section: section-4
+      source:
+        matches: '^## Section 4\n'
+  - call: replace_text
+    args: {id: "${page.id}", section: section-4, old: "Item 4.2:", new: "Item 4.2 (revised):"}
+    expect: {version: 2}
+  - call: read_page
+    args: {id: "${page.id}", section: section-4}
+    expect:
+      source:
+        contains: "Item 4.2 (revised):"
+        not_contains: "Item 4.2:"
+final:
+  page: page
+  versions: 2
+  source_contains: ["Item 4.2 (revised):", "Item 12.25:"]
+  source_excludes: ["Item 4.2:"]
+  page_text_contains: ["Item 4.2 (revised):", "Item 12.25:"]
+  snapshot:
+    title: Large handbook
+    blocks_include:
+      - h2: Section 1
+      - h2: Section 4
+      - h2: Section 12

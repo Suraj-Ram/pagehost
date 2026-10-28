@@ -1,0 +1,76 @@
+name: append-inside-a-section-and-add-a-sibling
+description: >
+  Content can be appended to the end of a named section. Appending a block that starts with a
+  heading, at the end of a section, creates a new sibling section right after it, and that new
+  section is immediately addressable by its own id.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Project plan
+      content: |-
+        ## Plan
+
+        - Ship the beta
+
+        ## Risks
+
+        - Vendor delay
+
+        ## Notes
+
+        Last updated by the team.
+  - call: append_page
+    args: {id: "${page.id}", section: plan, content: "Pilot starts in March."}
+    expect: {version: 2}
+  - call: append_page
+    args:
+      id: ${page.id}
+      section: plan
+      content: |-
+        ## Budget
+
+        Funding is approved.
+    expect: {version: 3}
+  - call: read_page
+    args: {id: "${page.id}", section: budget}
+    expect:
+      version: 3
+      section: budget
+      source: |-
+        ## Budget
+
+        Funding is approved.
+final:
+  page: page
+  versions: 3
+  source: |-
+    ## Plan
+
+    - Ship the beta
+
+    Pilot starts in March.
+
+    ## Budget
+
+    Funding is approved.
+
+    ## Risks
+
+    - Vendor delay
+
+    ## Notes
+
+    Last updated by the team.
+  snapshot:
+    title: Project plan
+    blocks:
+      - h2: Plan
+      - ul: [Ship the beta]
+      - p: Pilot starts in March.
+      - h2: Budget
+      - p: Funding is approved.
+      - h2: Risks
+      - ul: [Vendor delay]
+      - h2: Notes
+      - p: Last updated by the team.

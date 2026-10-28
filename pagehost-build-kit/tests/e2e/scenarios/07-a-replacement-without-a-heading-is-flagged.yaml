@@ -1,0 +1,37 @@
+name: a-replacement-without-a-heading-is-flagged
+description: >
+  If replacement content for a section does not start with a heading, the section's heading is
+  gone. The edit still applies, but the caller is warned so it can repair the page.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Notes page
+      content: |-
+        ## Plan
+
+        Old plan.
+
+        ## Notes
+
+        Keep me.
+  - call: replace_section
+    args: {id: "${page.id}", section: plan, content: "New plan text, no heading."}
+    expect:
+      version: 2
+      warnings: {min_length: 1}
+final:
+  page: page
+  versions: 2
+  source: |-
+    New plan text, no heading.
+
+    ## Notes
+
+    Keep me.
+  snapshot:
+    title: Notes page
+    blocks:
+      - p: New plan text, no heading.
+      - h2: Notes
+      - p: Keep me.

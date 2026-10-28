@@ -1,0 +1,34 @@
+name: deleting-a-page-takes-it-offline
+description: >
+  Once deleted, a page is no longer served at its URL, cannot be read or edited, and no longer
+  appears in listings.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Disposable ${unique}
+      content: |-
+        ## Temporary
+
+        Soon gone.
+  - call: list_pages
+    args: {query: "Disposable ${unique}"}
+    expect:
+      total: 1
+  - call: delete_page
+    args: {id: "${page.id}"}
+    expect: {deleted: true}
+  - call: read_page
+    args: {id: "${page.id}"}
+    expect_error: {code: page_not_found}
+  - call: append_page
+    args: {id: "${page.id}", content: "too late"}
+    expect_error: {code: page_not_found}
+  - call: list_pages
+    args: {query: "Disposable ${unique}"}
+    expect:
+      total: 0
+      pages: {length: 0}
+final:
+  page: page
+  gone: true

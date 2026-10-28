@@ -1,0 +1,30 @@
+name: an-edit-that-changes-nothing-adds-no-version
+description: >
+  Replacing text with identical text is reported (a warning) but does not clutter the history
+  with a duplicate version.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Project plan
+      content: |-
+        ## Plan
+
+        - Ship the beta
+  - call: replace_text
+    args: {id: "${page.id}", old: "Ship the beta", new: "Ship the beta"}
+    expect:
+      version: 1
+      warnings: {min_length: 1}
+final:
+  page: page
+  versions: 1
+  source: |-
+    ## Plan
+
+    - Ship the beta
+  snapshot:
+    title: Project plan
+    blocks:
+      - h2: Plan
+      - ul: [Ship the beta]

@@ -1,0 +1,66 @@
+name: replace-a-section-including-its-subsections
+description: >
+  Replacing a section rewrites everything under its heading, nested subsections included,
+  without quoting the old text. The removed subsection stops being addressable.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Project plan
+      content: |-
+        ## Plan
+
+        - Ship the beta
+
+        ## Risks
+
+        - Vendor delay
+
+        ### Mitigation
+
+        Use two vendors.
+
+        ## Notes
+
+        Last updated by the team.
+  - call: replace_section
+    args:
+      id: ${page.id}
+      section: risks
+      content: |-
+        ## Risks
+
+        None identified.
+    expect:
+      version: 2
+      warnings: {absent: true}
+  - call: read_page
+    args: {id: "${page.id}", section: mitigation}
+    expect_error:
+      code: section_not_found
+      details:
+        available: {contains: risks}
+final:
+  page: page
+  versions: 2
+  source: |-
+    ## Plan
+
+    - Ship the beta
+
+    ## Risks
+
+    None identified.
+
+    ## Notes
+
+    Last updated by the team.
+  snapshot:
+    title: Project plan
+    blocks:
+      - h2: Plan
+      - ul: [Ship the beta]
+      - h2: Risks
+      - p: None identified.
+      - h2: Notes
+      - p: Last updated by the team.

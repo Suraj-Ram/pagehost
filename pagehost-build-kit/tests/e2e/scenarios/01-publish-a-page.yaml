@@ -1,0 +1,58 @@
+name: publish-a-page
+description: >
+  A page is created from a title and a Markdown body. It is served at the returned URL,
+  reads back exactly as written, and renders headings, inline marks, bullets and numbered steps.
+steps:
+  - call: publish_page
+    as: page
+    args:
+      title: Team handbook
+      content: |-
+        ## Welcome
+
+        Welcome to the **team handbook**. It covers *how we work*, with `code` and a [link](https://example.com/docs).
+
+        ## Principles
+
+        - Write things down
+        - Default to open
+        - Ship small changes
+
+        ## Steps
+
+        1. Clone the repo
+        2. Run the tests
+        3. Open a pull request
+    expect:
+      version: 1
+      id: {any: true}
+      url: {matches: "^https?://"}
+      warnings: {absent: true}
+final:
+  page: page
+  versions: 1
+  source: |-
+    ## Welcome
+
+    Welcome to the **team handbook**. It covers *how we work*, with `code` and a [link](https://example.com/docs).
+
+    ## Principles
+
+    - Write things down
+    - Default to open
+    - Ship small changes
+
+    ## Steps
+
+    1. Clone the repo
+    2. Run the tests
+    3. Open a pull request
+  snapshot:
+    title: Team handbook
+    blocks:
+      - h2: Welcome
+      - p: "Welcome to the **team handbook**. It covers *how we work*, with `code` and a [link](https://example.com/docs)."
+      - h2: Principles
+      - ul: [Write things down, Default to open, Ship small changes]
+      - h2: Steps
+      - ol: [Clone the repo, Run the tests, Open a pull request]

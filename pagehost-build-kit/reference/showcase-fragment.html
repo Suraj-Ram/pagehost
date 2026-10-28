@@ -1,0 +1,79 @@
+<nav data-component="toc" aria-label="Contents">
+<p data-role="label">On this page</p>
+<ol>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#metrics">Metrics</a></li>
+<li><a href="#timeline">Timeline</a></li>
+<li><a href="#regions">Regions</a></li>
+<li><a href="#options">Options</a></li>
+<li><a href="#notes">Notes</a></li>
+</ol>
+</nav>
+
+<h2 id="summary">Summary</h2>
+<aside data-component="callout" data-kind="note"><strong>Scope</strong><p>Figures cover North America and Europe through Oct 26.</p></aside>
+<aside data-component="callout" data-kind="warning"><strong>Latency regression</strong><p>Staging p95 is above target; the fix is in review.</p></aside>
+<aside data-component="callout" data-kind="success"><strong>Churn target met</strong><p>Monthly churn has stayed under 2.5% for two quarters.</p></aside>
+<aside data-component="callout" data-kind="danger"><strong>Rollback required</strong><p>The EU billing change failed validation and must be reverted before Dec 1.</p></aside>
+
+<h2 id="metrics">Metrics</h2>
+<dl data-component="stats">
+<div data-status="done"><dt>Revenue</dt><dd data-role="value">$5.2M</dd><dd data-role="delta">+12%</dd><dd data-role="status">Done</dd></div>
+<div data-status="done"><dt>Churn</dt><dd data-role="value">2.1%</dd><dd data-role="delta">-0.4 pt</dd><dd data-role="status">Done</dd></div>
+<div data-status="at-risk"><dt>NPS</dt><dd data-role="value">47</dd><dd data-role="delta">+3</dd><dd data-role="status">At risk</dd></div>
+<div data-status="done"><dt>Signups</dt><dd data-role="value">12,400</dd><dd data-role="delta">+8%</dd><dd data-role="status">Done</dd></div>
+<div data-status="blocked"><dt>Latency p95</dt><dd data-role="value">340 ms</dd><dd data-role="delta">+40 ms</dd><dd data-role="status">Blocked</dd></div>
+<div data-status="active"><dt>Support backlog</dt><dd data-role="value">38</dd><dd data-role="delta">-12</dd><dd data-role="status">Active</dd></div>
+</dl>
+
+<h2 id="timeline">Timeline</h2>
+<ol data-component="timeline">
+<li data-status="done"><time datetime="2026-10-01">Oct 1, 2026</time><strong>Beta opens</strong><span data-role="status">Done</span></li>
+<li data-status="active"><time datetime="2026-11-15">Nov 15, 2026</time><strong>General availability</strong><span data-role="status">Active</span></li>
+<li data-status="at-risk"><time datetime="2026-11-28">Nov 28, 2026</time><strong>Billing migration</strong><span data-role="status">At risk</span></li>
+<li data-status="blocked"><time datetime="2026-12-01">Dec 1, 2026</time><strong>Data residency review</strong><span data-role="status">Blocked</span></li>
+<li data-status="planned"><time datetime="2026-12-08">Dec 8, 2026</time><strong>EU rollout</strong><span data-role="status">Planned</span></li>
+</ol>
+
+<h2 id="regions">Regions</h2>
+<table>
+<thead><tr><th>Region</th><th data-align="end">Signups</th><th data-align="end">Conversion</th><th data-align="end">Status</th></tr></thead>
+<tbody>
+<tr><td>North America</td><td data-align="end">5,120</td><td data-align="end">3.4%</td><td data-align="end"><span data-role="status" data-status="done">Done</span></td></tr>
+<tr><td>Europe</td><td data-align="end">3,860</td><td data-align="end">2.9%</td><td data-align="end"><span data-role="status" data-status="at-risk">At risk</span></td></tr>
+<tr><td>Asia-Pacific</td><td data-align="end">2,440</td><td data-align="end">2.2%</td><td data-align="end"><span data-role="status" data-status="active">Active</span></td></tr>
+<tr><td>Latin America</td><td data-align="end">980</td><td data-align="end">1.8%</td><td data-align="end"><span data-role="status" data-status="planned">Planned</span></td></tr>
+</tbody>
+</table>
+
+<h2 id="options">Options</h2>
+<div data-component="compare">
+<article>
+<h3>Migrate in place</h3>
+<p>Single maintenance window</p>
+<ul data-role="pros" aria-label="Pros"><li>Lowest cost</li><li>Fewer moving parts</li></ul>
+<ul data-role="cons" aria-label="Cons"><li>Two hours of downtime</li><li>Hard to roll back</li></ul>
+</article>
+<article data-recommended>
+<h3>Blue/green cutover<span data-role="flag">Recommended</span></h3>
+<p>Run both stacks in parallel</p>
+<ul data-role="pros" aria-label="Pros"><li>Instant rollback</li><li>No downtime</li></ul>
+<ul data-role="cons" aria-label="Cons"><li>Double infrastructure cost for two weeks</li><li>More coordination</li></ul>
+</article>
+</div>
+
+<h2 id="notes">Notes</h2>
+<details open><summary>Methodology</summary><p>Metrics are measured against the previous quarter. Latency is the 95th percentile over seven days.</p></details>
+<details><summary>Raw data sources</summary><p>Warehouse exports, refreshed nightly.</p></details>
+
+<h2>Everyday text</h2>
+<p>Body copy is 16px with generous leading. It supports <strong>emphasis</strong>, <em>italics</em>, <a href="https://example.com/">links</a>, <code>inline code</code>, <mark>highlights</mark>, <del>removed text</del>, and keyboard hints like <kbd>Ctrl</kbd> + <kbd>K</kbd>.</p>
+<ul><li>Bulleted lists stay compact</li><li>Nested structure follows the document outline</li></ul>
+<ol><li>Numbered steps keep their order</li><li>Each step reads cleanly on mobile</li></ol>
+<blockquote><p>Meaning lives in the markup; looks live in the stylesheet.</p></blockquote>
+<pre><code>PAGEHOST_THEME=pagehost
+PAGEHOST_TOKEN=change-me</code></pre>
+<hr>
+<h3>Third-level heading</h3>
+<h4>Fourth-level heading</h4>
+<p>Closing paragraph after the headings.</p>
