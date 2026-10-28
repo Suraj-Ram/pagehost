@@ -1,6 +1,6 @@
 # Implementation plan
 
-MVP: eleven MCP tools, Markdown in, inert HTML out, versions in SQLite, pages on disk. Done when build-kit scenarios 01–18 and 20 pass. Auth (§11.2) and the §12 components (scenario 19) stay out. REST, the CLI, and nginx come after this plan.
+MVP: eleven MCP tools, Markdown in, inert HTML out, versions in SQLite, pages on disk. Done when build-kit scenarios 01–18 and 20 pass.
 
 Mark a box `[x]` only after that task's exit command passes, and append the commit hash. Mark only the task you own. Leave every `__init__.py` empty until `bootstrap`.
 
@@ -60,7 +60,7 @@ Critical path: `scaffold` → `domain-edits` → `app-service` → `bootstrap` �
 - [x] **scaffold** `9a47362`
   - Owns: `pyproject.toml` dependencies, `pagehost/` package dirs, `pagehost/domain/ports.py`, `pagehost/domain/errors.py`, `pagehost/domain/models.py`, `pagehost/config.py`, `tests/test_architecture.py`, `tests/test_settings.py`, unmodified `pagehost.css` as package data.
   - Exit: `pytest tests/test_architecture.py tests/test_settings.py`
-  - Pass means layers import legally (§2.3), and `Settings(data_dir, token, url_template)` exposes `site_root`. Port and service signatures are frozen here. The app accepts a bearer token and does not enforce it.
+  - Pass means layers import legally (§2.3), and `Settings(data_dir, token, url_template)` exposes `site_root`. Port and service signatures are frozen here.
 
 ## Wave 1
 
@@ -125,7 +125,7 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
 - [ ] **build-kit scenarios** — after `bootstrap`
   - Owns: `pagehost-build-kit/tests/e2e/conftest.py` only if the entry point must change. It already imports `pagehost.bootstrap.create_app` and `pagehost.config.Settings`.
   - Exit: `pytest pagehost-build-kit/tests/e2e`
-  - Scenarios 01–18 and 20 pass. Scenario 19 stays `planned` (`xfail` strict). Then run the mutation check once: one injected fault at a time, and the scenario that pins it fails.
+  - Scenarios 01–18 and 20 pass. Then run the mutation check once: one injected fault at a time, and the scenario that pins it fails.
 
 ## Already landed
 
@@ -133,8 +133,4 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
 - [x] Scenarios 01, 02, 03, 06, 07, 08, 09, 11, 18 in `tests/acceptance/cases.py`. `e50a263`, `1bef74d`, `e827d6c`
 - [ ] Wire `tests/acceptance/conftest.py` `driver` to `create_app`. This waits on `bootstrap`. The scenario tests skip until then.
 
-Build-kit scenarios still absent from `tests/acceptance/cases.py`: 04, 05, 10, 12, 13, 14, 15, 16, 17, 19, 20.
-
-## Outside this plan
-
-Auth middleware, §12 components, REST, CLI `rerender`, and nginx. Do not start these from this list.
+Build-kit scenarios still absent from `tests/acceptance/cases.py`: 04, 05, 10, 12, 13, 14, 15, 16, 17, 20.
