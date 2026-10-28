@@ -115,7 +115,7 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
 
 ## Wave 3
 
-- [ ] **bootstrap** — after every Wave 1 task and `app-service`
+- [x] **bootstrap** `364fa5a` — after every Wave 1 task and `app-service`
   - Owns: `pagehost/bootstrap.py`, `tests/test_bootstrap.py`
   - Exit: `pytest tests/test_bootstrap.py` and the accumulated unit suite
   - `create_app` mounts `/mcp/`, installs assets, and a publish leaves `<sites>/<id>/current/index.html`. Markdown through the real sanitizer is inert and contains no `<h1>`.
