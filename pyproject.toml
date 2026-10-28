@@ -19,7 +19,12 @@ dev = ["pytest>=9"]
 minversion = "9.0"
 addopts = ["-ra", "-q"]
 testpaths = ["tests"]
-pythonpath = [".", "tests"]
+pythonpath = [".", "tests", "pagehost-build-kit/tests"]
 markers = [
     "acceptance: apply a list of page operations and compare semantic HTML",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
 ]

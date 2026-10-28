@@ -14,6 +14,7 @@ from fastmcp.exceptions import ToolError
 from pagehost.application.api import PageService
 from pagehost.config import Settings
 from pagehost.domain.errors import PagehostError
+from pagehost.domain.models import Candidate
 
 # Appendix A for the markdown format, including the trailing newline of the block.
 _MARKDOWN_INSTRUCTIONS = """\
@@ -221,12 +222,29 @@ def _tool_error(exc: PagehostError) -> ToolError:
     body = exc.as_dict()
     details = body.get("details")
     if isinstance(details, dict):
-        kept = {key: value for key, value in details.items() if key not in _DROPPED_DETAILS}
+        kept = {
+            key: _jsonable(value)
+            for key, value in details.items()
+            if key not in _DROPPED_DETAILS
+        }
         if kept:
             body["details"] = kept
         else:
             body.pop("details", None)
     return ToolError(json.dumps(body, separators=(",", ":")))
+
+
+def _jsonable(value: Any) -> Any:
+    if isinstance(value, Candidate):
+        body = {"line": value.line, "snippet": value.snippet}
+        if value.section is not None:
+            body["section"] = value.section
+        return body
+    if isinstance(value, list):
+        return [_jsonable(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _jsonable(item) for key, item in value.items()}
+    return value
 
 
 @contextmanager

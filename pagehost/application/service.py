@@ -168,7 +168,10 @@ class PagehostService:
         base_version: int | None = None,
     ) -> Mutation:
         current = self._begin(page_id, base_version)
-        sections = () if section is None else self._require_sections(current)
+        located = self._sections(current)
+        if section is not None and located is None:
+            raise UnsupportedOperation(f"format {current.format!r} has no sections")
+        sections = () if located is None else located
         new_source = replace_exact(
             current.source,
             normalize_newlines(old),
