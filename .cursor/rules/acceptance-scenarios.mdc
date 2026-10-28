@@ -1,0 +1,23 @@
+---
+description: How acceptance scenarios map operations to MCP tools and semantic HTML
+globs: tests/acceptance/**/*.py
+alwaysApply: false
+---
+
+# Acceptance scenarios
+
+When adding or editing a page scenario:
+
+- Add a `Scenario` to `SCENARIOS` in `tests/acceptance/cases.py`.
+- Each item in `operations` is one tool call, in list order. The class-to-tool table is the module docstring of `tests/acceptance/operations.py`. Use those classes.
+- The driver owns the page id. Leave ids out of the scenario.
+- `blocks` is semantic HTML, checked with `assert_semantic`. Record what a reader sees. Leave out stylesheets, classes, wrappers, and the page shell.
+
+```python
+Scenario(
+    name="publish-a-page",
+    title="Team handbook",
+    operations=(Publish(title="Team handbook", content="## Welcome\n"),),
+    blocks=({"h2": "Welcome"},),
+)
+```
