@@ -26,7 +26,7 @@ flowchart TD
   end
 
   subgraph W3["Wave 3 · join, 1 agent"]
-    B["bootstrap.create_app"]
+    B["bootstrap.server"]
   end
 
   subgraph W4["Wave 4 · gate"]
@@ -118,12 +118,12 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
 - [x] **bootstrap** `364fa5a` — after every Wave 1 task and `app-service`
   - Owns: `pagehost/bootstrap.py`, `tests/test_bootstrap.py`
   - Exit: `pytest tests/test_bootstrap.py` and the accumulated unit suite
-  - `create_app` mounts `/mcp/`, installs assets, and a publish leaves `<sites>/<id>/current/index.html`. Markdown through the real sanitizer is inert and contains no `<h1>`.
+  - `create_server` returns the FastMCP server. `fastmcp run` calls the `server` factory. A publish leaves `<sites>/<id>/current/index.html`. Markdown through the real sanitizer is inert and contains no `<h1>`.
 
 ## Wave 4
 
 - [x] **build-kit scenarios** `b7c46ae` `707ca3e` — after `bootstrap`
-  - Owns: `pagehost-build-kit/tests/e2e/conftest.py` only if the entry point must change. It already imports `pagehost.bootstrap.create_app` and `pagehost.config.Settings`.
+  - Owns: `pagehost-build-kit/tests/e2e/conftest.py` only if the entry point must change. It imports `pagehost.bootstrap.create_server` and `pagehost.config.Settings`.
   - Exit: `pytest pagehost-build-kit/tests/e2e`
   - Scenarios 01–18 and 20 pass. Scenario 19 stays a strict expected failure. `scripts/mutation_check.py` injects one fault at a time; the scenario that pins it fails. Bypassing only the sanitizer stays invisible.
 
@@ -131,6 +131,6 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
 
 - [x] Acceptance scaffold in `tests/acceptance/`. `e50a263`
 - [x] Scenarios 01, 02, 03, 06, 07, 08, 09, 11, 18 in `tests/acceptance/cases.py`. `e50a263`, `1bef74d`, `e827d6c`
-- [ ] Wire `tests/acceptance/conftest.py` `driver` to `create_app`. This waits on `bootstrap`. The scenario tests skip until then.
+- [ ] Wire `tests/acceptance/conftest.py` `driver` to `create_server`. This waits on `bootstrap`. The scenario tests skip until then.
 
 Build-kit scenarios still absent from `tests/acceptance/cases.py`: 04, 05, 10, 12, 13, 14, 15, 16, 17, 20.

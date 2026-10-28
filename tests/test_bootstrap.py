@@ -11,28 +11,27 @@ from pathlib import Path
 import uvicorn
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
-from starlette.routing import Mount
 
-from pagehost.bootstrap import create_app
+from pagehost.bootstrap import create_server
 from pagehost.config import Settings
 
 _HOSTILE = "<script>alert(1)</script>\n\n# Stolen\n\nplain text"
 
 
-def test_create_app_installs_assets_and_mounts_mcp(tmp_path: Path):
+def test_create_server_installs_assets_and_serves_mcp(tmp_path: Path):
     settings = _settings(tmp_path)
-    app = create_app(settings)
+    app = create_server(settings).http_app()
 
     css = settings.site_root / "_assets" / "pagehost.css"
     expected = Path(__file__).resolve().parents[1] / "pagehost" / "assets" / "pagehost.css"
     assert css.is_file()
     assert css.read_bytes() == expected.read_bytes()
-    assert any(isinstance(route, Mount) and route.path == "/mcp" for route in app.routes)
+    assert any(getattr(route, "path", "") == "/mcp" for route in app.routes)
 
 
 def test_publish_writes_inert_html_without_an_author_h1(tmp_path: Path):
     settings = _settings(tmp_path)
-    app = create_app(settings)
+    app = create_server(settings).http_app()
     server, thread, port = _serve(app)
     try:
         published = asyncio.run(_publish(port))

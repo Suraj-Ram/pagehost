@@ -24,7 +24,7 @@ PAGEHOST_E2E_PAGE_ORIGIN=http://localhost:8080 \   # optional: reach <id>.pages.
 ```
 
 `tests/e2e/conftest.py` also has a *local* mode that boots the reference implementation
-(`from pagehost.bootstrap import create_app` ...). It is the only implementation-aware file: adapt it to your own
+(`from pagehost.bootstrap import create_server` ...). It is the only implementation-aware file: adapt it to your own
 entry point, or just use the remote mode above. If you use the local mode, keep the served layout in SPEC §9.2
 (`<sites>/<id>/current/index.html`).
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,3 +30,23 @@ class Settings:
     @property
     def site_root(self) -> Path:
         return self.data_dir / "sites"
+
+    @classmethod
+    def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
+        """Read §11.1. `PAGEHOST_TOKEN` is required; everything else has a default."""
+        values = os.environ if env is None else env
+        token = values.get("PAGEHOST_TOKEN", "")
+        if token == "":
+            raise ValueError("PAGEHOST_TOKEN is required")
+        return cls(
+            data_dir=Path(values.get("PAGEHOST_DATA_DIR", "data")),
+            token=token,
+            url_template=values.get(
+                "PAGEHOST_URL_TEMPLATE",
+                "https://{id}.pages.internal.example.com/",
+            ),
+            max_source_bytes=int(values.get("PAGEHOST_MAX_SOURCE_BYTES", "1000000")),
+            default_format=values.get("PAGEHOST_DEFAULT_FORMAT", "markdown"),
+            mcp_author=values.get("PAGEHOST_MCP_AUTHOR", "agent"),
+            full_read_tokens=int(values.get("PAGEHOST_MCP_FULL_READ_TOKENS", "1000")),
+        )

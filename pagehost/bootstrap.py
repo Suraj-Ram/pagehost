@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastmcp import FastMCP
 
 from pagehost.adapters.markdown import MarkdownFormat
 from pagehost.adapters.publisher import FilesystemPublisher
@@ -15,8 +15,8 @@ from pagehost.config import Settings
 from pagehost.transports.mcp import build_mcp
 
 
-def create_app(settings: Settings) -> FastAPI:
-    """Wire the real adapters and mount the MCP server at ``/mcp``."""
+def create_server(settings: Settings) -> FastMCP:
+    """Wire the real adapters and return the FastMCP server."""
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     markdown = MarkdownFormat(Nh3Sanitizer())
     theme = PagehostTheme()
@@ -31,7 +31,4 @@ def create_app(settings: Settings) -> FastAPI:
         default_format=settings.default_format,
         max_source_bytes=settings.max_source_bytes,
     )
-    mcp_app = build_mcp(service, settings).http_app(path="/")
-    app = FastAPI(lifespan=mcp_app.lifespan)
-    app.mount("/mcp", mcp_app)
-    return app
+    return build_mcp(service, settings)

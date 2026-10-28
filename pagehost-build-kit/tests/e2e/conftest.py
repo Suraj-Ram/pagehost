@@ -55,7 +55,7 @@ def endpoint(tmp_path_factory):
 
     import uvicorn
 
-    from pagehost.bootstrap import create_app
+    from pagehost.bootstrap import create_server
     from pagehost.config import Settings
 
     settings = Settings(data_dir=tmp_path_factory.mktemp("e2e"), token=TOKEN,
@@ -63,7 +63,7 @@ def endpoint(tmp_path_factory):
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
-    server = uvicorn.Server(uvicorn.Config(create_app(settings), host="127.0.0.1", port=port,
+    server = uvicorn.Server(uvicorn.Config(create_server(settings).http_app(), host="127.0.0.1", port=port,
                                            log_level="warning"))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
