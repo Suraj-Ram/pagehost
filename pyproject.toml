@@ -3,7 +3,14 @@ name = "pagehost"
 version = "0.1.0"
 description = "Publish and edit HTML pages through MCP tools."
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "fastapi",
+    "fastmcp",
+    "markdown-it-py",
+    "mdit-py-plugins",
+    "nh3",
+    "uvicorn",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=9"]
@@ -12,7 +19,7 @@ dev = ["pytest>=9"]
 minversion = "9.0"
 addopts = ["-ra", "-q"]
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = [".", "tests"]
 markers = [
     "acceptance: apply a list of page operations and compare semantic HTML",
 ]
