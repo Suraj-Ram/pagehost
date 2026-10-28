@@ -108,7 +108,7 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
 
 ## Wave 2
 
-- [ ] **app-service** — after `domain-ids` and `domain-edits`
+- [x] **app-service** `6d4cc3c` — after `domain-ids` and `domain-edits`
   - Owns: `pagehost/application/service.py`, in-memory fakes, `tests/application/test_service.py`
   - Exit: `pytest tests/application/test_service.py`
   - §9.1 on fakes: render, then persist, then publish. Identical edits add no version. Id allocation retries. Rollback copies forward. A failed publish is repaired by rerender.
