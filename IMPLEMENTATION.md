@@ -122,10 +122,10 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
 
 ## Wave 4
 
-- [ ] **build-kit scenarios** — after `bootstrap`
+- [x] **build-kit scenarios** `b7c46ae` `707ca3e` — after `bootstrap`
   - Owns: `pagehost-build-kit/tests/e2e/conftest.py` only if the entry point must change. It already imports `pagehost.bootstrap.create_app` and `pagehost.config.Settings`.
   - Exit: `pytest pagehost-build-kit/tests/e2e`
-  - Scenarios 01–18 and 20 pass. Then run the mutation check once: one injected fault at a time, and the scenario that pins it fails.
+  - Scenarios 01–18 and 20 pass. Scenario 19 stays a strict expected failure. `scripts/mutation_check.py` injects one fault at a time; the scenario that pins it fails. Bypassing only the sanitizer stays invisible.
 
 ## Already landed
 
