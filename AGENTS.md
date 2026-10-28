@@ -10,6 +10,7 @@ After a tangible, testable part of the system is built, make one small atomic co
 - A commit contains one part. Leave unrelated work for its own commit.
 - Name the commit for why the slice exists.
 - Force push, hard reset, and skipping hooks still require an explicit request.
+- When the human asks for a new branch, commit the work on that branch and stop. They review the branch before it is merged into `main`. Do not merge it yourself.
 
 ## Implementation plan
 
