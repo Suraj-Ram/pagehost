@@ -5,7 +5,15 @@ blocks a reader should see. Match content, not markup. The stylesheet, classes,
 wrappers, and the page shell are not part of `blocks`.
 """
 
-from acceptance.operations import Append, DeleteSection, Publish, Scenario
+from acceptance.operations import (
+    Append,
+    DeleteSection,
+    Publish,
+    ReplaceSection,
+    ReplaceText,
+    Rollback,
+    Scenario,
+)
 
 _HANDBOOK = """\
 ## Welcome
@@ -157,9 +165,154 @@ MARKDOWN_FEATURE_TOUR = Scenario(
     ),
 )
 
+_PLAN_WITH_NOTES = """\
+## Plan
+
+- Ship the beta
+
+## Risks
+
+- Vendor delay
+
+## Notes
+
+Last updated by the team.
+""".removesuffix("\n")
+
+_BUDGET = """\
+## Budget
+
+Funding is approved.
+""".removesuffix("\n")
+
+APPEND_INSIDE_A_SECTION = Scenario(
+    name="append-inside-a-section-and-add-a-sibling",
+    title="Project plan",
+    operations=(
+        Publish(title="Project plan", content=_PLAN_WITH_NOTES),
+        Append(content="Pilot starts in March.", section="plan"),
+        Append(content=_BUDGET, section="plan"),
+    ),
+    blocks=(
+        {"h2": "Plan"},
+        {"ul": ["Ship the beta"]},
+        {"p": "Pilot starts in March."},
+        {"h2": "Budget"},
+        {"p": "Funding is approved."},
+        {"h2": "Risks"},
+        {"ul": ["Vendor delay"]},
+        {"h2": "Notes"},
+        {"p": "Last updated by the team."},
+    ),
+)
+
+_RISKS_REPLACEMENT = """\
+## Risks
+
+None identified.
+""".removesuffix("\n")
+
+REPLACE_A_SECTION = Scenario(
+    name="replace-a-section-including-its-subsections",
+    title="Project plan",
+    operations=(
+        Publish(title="Project plan", content=_PLAN),
+        ReplaceSection(section="risks", content=_RISKS_REPLACEMENT),
+    ),
+    blocks=(
+        {"h2": "Plan"},
+        {"ul": ["Ship the beta"]},
+        {"h2": "Risks"},
+        {"p": "None identified."},
+        {"h2": "Notes"},
+        {"p": "Last updated by the team."},
+    ),
+)
+
+_NOTES_PAGE = """\
+## Plan
+
+Old plan.
+
+## Notes
+
+Keep me.
+""".removesuffix("\n")
+
+REPLACEMENT_WITHOUT_A_HEADING = Scenario(
+    name="a-replacement-without-a-heading-is-flagged",
+    title="Notes page",
+    operations=(
+        Publish(title="Notes page", content=_NOTES_PAGE),
+        ReplaceSection(section="plan", content="New plan text, no heading."),
+    ),
+    blocks=(
+        {"p": "New plan text, no heading."},
+        {"h2": "Notes"},
+        {"p": "Keep me."},
+    ),
+)
+
+_OPTIONS = """\
+## Option
+
+Choose A.
+
+## Option
+
+Choose B.
+""".removesuffix("\n")
+
+DUPLICATE_HEADINGS = Scenario(
+    name="duplicate-headings-get-numbered-section-ids",
+    title="Options",
+    operations=(
+        Publish(title="Options", content=_OPTIONS),
+        ReplaceText(old="Choose B.", new="Choose C.", section="option-2"),
+    ),
+    blocks=(
+        {"h2": "Option"},
+        {"p": "Choose A."},
+        {"h2": "Option"},
+        {"p": "Choose C."},
+    ),
+)
+
+_BETA = """\
+## Plan
+
+- Ship the beta
+""".removesuffix("\n")
+
+_RISKS = """\
+## Risks
+
+- Vendor delay
+""".removesuffix("\n")
+
+ROLLBACK_RESTORES_AN_EARLIER_VERSION = Scenario(
+    name="rollback-restores-an-earlier-version",
+    title="Project plan",
+    operations=(
+        Publish(title="Project plan", content=_BETA),
+        Append(content=_RISKS),
+        ReplaceText(old="Ship the beta", new="Ship GA"),
+        Rollback(to_version=1),
+    ),
+    blocks=(
+        {"h2": "Plan"},
+        {"ul": ["Ship the beta"]},
+    ),
+)
+
 SCENARIOS = (
     PUBLISH_A_PAGE,
     APPEND_TO_THE_END,
+    APPEND_INSIDE_A_SECTION,
+    REPLACE_A_SECTION,
+    REPLACEMENT_WITHOUT_A_HEADING,
     DELETE_A_SECTION,
+    DUPLICATE_HEADINGS,
+    ROLLBACK_RESTORES_AN_EARLIER_VERSION,
     MARKDOWN_FEATURE_TOUR,
 )
