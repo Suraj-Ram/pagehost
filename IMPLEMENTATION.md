@@ -81,7 +81,7 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
   - Exit: `pytest tests/adapters/test_sanitizer.py`
   - Appendix D allowlist. Hostile input is inert. Links get `rel="noopener noreferrer"`.
 
-- [ ] **markdown** — after `scaffold`
+- [x] **markdown** `d5624e1` — after `scaffold`
   - Owns: `pagehost/adapters/markdown.py`, `tests/adapters/test_markdown.py`
   - Exit: `pytest tests/adapters/test_markdown.py`
   - CommonMark, GFM tables, strikethrough, `:::details` and `:::callout`, `headings()`, §4.3 warnings. Calls the sanitizer port. A passthrough double records that `clean()` ran.
