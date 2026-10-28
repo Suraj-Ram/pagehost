@@ -66,17 +66,17 @@ Critical path: `scaffold` → `domain-edits` → `app-service` → `bootstrap` �
 
 Each agent runs `pytest tests/test_architecture.py` plus its own file. After all eight are checked, one run of `pytest tests/test_architecture.py tests/domain tests/adapters tests/transports/test_mcp.py` must pass.
 
-- [ ] **domain-ids** — after `scaffold`
+- [x] **domain-ids** `d06626c` — after `scaffold`
   - Owns: `pagehost/domain/ids.py`, `pagehost/domain/normalize.py`, `tests/domain/test_ids.py`
   - Exit: `pytest tests/domain/test_ids.py`
   - Slug, id pattern, five-attempt exhaustion, CRLF to LF, title length, `max_source_bytes`.
 
-- [ ] **domain-edits** — after `scaffold`
+- [x] **domain-edits** `f833749` — after `scaffold`
   - Owns: `pagehost/domain/sections.py`, `pagehost/domain/text.py`, `pagehost/domain/edits.py`, `tests/domain/test_appendix_c.py`
   - Exit: `pytest tests/domain/test_appendix_c.py`
   - Appendix C: splice, slugs, ranges, `line_delta`, exact match, near-miss candidates, 4,000 lines in under two seconds.
 
-- [ ] **sanitizer** — after `scaffold`
+- [x] **sanitizer** `b84e1ec` — after `scaffold`
   - Owns: `pagehost/adapters/sanitizer.py`, `tests/adapters/test_sanitizer.py`
   - Exit: `pytest tests/adapters/test_sanitizer.py`
   - Appendix D allowlist. Hostile input is inert. Links get `rel="noopener noreferrer"`.
@@ -86,22 +86,22 @@ Each agent runs `pytest tests/test_architecture.py` plus its own file. After all
   - Exit: `pytest tests/adapters/test_markdown.py`
   - CommonMark, GFM tables, strikethrough, `:::details` and `:::callout`, `headings()`, §4.3 warnings. Calls the sanitizer port. A passthrough double records that `clean()` ran.
 
-- [ ] **theme** — after `scaffold`
+- [x] **theme** `f6150f4` — after `scaffold`
   - Owns: `pagehost/adapters/theme.py`, `tests/adapters/test_theme.py`
   - Exit: `pytest tests/adapters/test_theme.py`
   - §8.1 shell, escaped title, no script, class, or inline style. Asset bytes equal the provided `pagehost.css`.
 
-- [ ] **sqlite-repo** — after `scaffold`
+- [x] **sqlite-repo** `57ffd31` — after `scaffold`
   - Owns: `pagehost/adapters/sqlite_repo.py`, `tests/adapters/test_repository.py`
   - Exit: `pytest tests/adapters/test_repository.py`
   - §3.5 on a temp database: WAL, `BEGIN IMMEDIATE`, soft delete, `version_conflict`.
 
-- [ ] **publisher** — after `scaffold`
+- [x] **publisher** `88630cc` — after `scaffold`
   - Owns: `pagehost/adapters/publisher.py`, `pagehost/adapters/url_scheme.py`, `tests/adapters/test_publisher.py`
   - Exit: `pytest tests/adapters/test_publisher.py`
   - Temp file plus rename, atomic `current` symlink, `unpublish` removes only `current`, `{id}` in the URL template.
 
-- [ ] **mcp** — after `scaffold`
+- [x] **mcp** `8929031` — after `scaffold`
   - Owns: `pagehost/transports/mcp.py`, `tests/transports/test_mcp.py`
   - Exit: `pytest tests/transports/test_mcp.py`
   - Eleven tools, Appendix A instructions, Appendix B descriptions, §6.3 shapes, §6.5 error JSON. Outline and `since` live here. Tests use a fake service.
