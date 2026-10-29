@@ -6,9 +6,10 @@ from pathlib import Path
 
 from acceptance.cases import MARKDOWN_FEATURE_TOUR
 from acceptance.operations import Publish
-from acceptance.semantic import assert_semantic
+from acceptance.semantic import assert_semantic, semantic_view
 
 from pagehost.adapters.markdown import MarkdownFormat
+from pagehost.adapters.sanitizer import Nh3Sanitizer
 from pagehost.domain.errors import InvalidContent
 from pagehost.domain.models import Heading
 
@@ -341,6 +342,159 @@ def test_nested_headings_are_not_section_boundaries():
     assert "<h2>Secret</h2>" in rendered.html
     assert rendered.warnings == (_H1,)
     assert fmt.headings("- # Secret\n") == ()
+
+
+def test_timeline_dates_statuses_and_plain_times():
+    fmt, _sanitizer = _format()
+    source = (
+        ":::timeline\n"
+        "2026-10-01 | Beta opens | done\n"
+        "2026-11-15 | General availability | active\n"
+        "9:00 AM | Staging check\n"
+        "4:45 PM | Regional cutover\n"
+        ":::\n"
+    )
+
+    result = fmt.render(source)
+
+    assert result.warnings == ()
+    assert result.html == (
+        '<ol data-component="timeline">\n'
+        '<li data-status="done"><time datetime="2026-10-01">Oct 1, 2026</time>\n'
+        "<strong>Beta opens</strong>"
+        '<span data-role="status">Done</span></li>\n'
+        '<li data-status="active"><time datetime="2026-11-15">Nov 15, 2026</time>\n'
+        "<strong>General availability</strong>"
+        '<span data-role="status">Active</span></li>\n'
+        "<li><time>9:00 AM</time>\n"
+        "<strong>Staging check</strong></li>\n"
+        "<li><time>4:45 PM</time>\n"
+        "<strong>Regional cutover</strong></li>\n"
+        "</ol>\n"
+    )
+    assert semantic_view(result.html).blocks == (
+        {
+            "timeline": [
+                {"when": "2026-10-01", "title": "Beta opens", "status": "done"},
+                {"when": "2026-11-15", "title": "General availability", "status": "active"},
+                {"when": "9:00 AM", "title": "Staging check"},
+                {"when": "4:45 PM", "title": "Regional cutover"},
+            ]
+        },
+    )
+
+
+def test_timeline_status_labels_and_an_invalid_date():
+    fmt, _sanitizer = _format()
+    source = (
+        ":::timeline\n"
+        "2026-10-20 | Latency budget | at-risk\n"
+        "2026-11-01 | Regional cutover | blocked\n"
+        "2026-12-01 | Post-launch review | planned\n"
+        "2026-02-31 | Impossible day\n"
+        ":::\n"
+    )
+
+    result = fmt.render(source)
+
+    assert result.warnings == ()
+    assert '<span data-role="status">At risk</span>' in result.html
+    assert '<span data-role="status">Blocked</span>' in result.html
+    assert '<span data-role="status">Planned</span>' in result.html
+    assert "<li><time>2026-02-31</time>\n<strong>Impossible day</strong></li>" in result.html
+
+
+def test_timeline_unknown_status_is_omitted():
+    fmt, _sanitizer = _format()
+
+    result = fmt.render(":::timeline\n2026-10-01 | Beta opens | wip\n:::\n")
+
+    assert result.warnings == (
+        "timeline row 1: unknown status 'wip'; use done|active|at-risk|blocked|planned",
+    )
+    assert "data-status" not in result.html
+    assert "data-role" not in result.html
+    assert '<time datetime="2026-10-01">Oct 1, 2026</time>' in result.html
+    assert "<strong>Beta opens</strong>" in result.html
+
+
+def test_timeline_malformed_row_is_a_paragraph():
+    fmt, _sanitizer = _format()
+    source = (
+        ":::timeline\n"
+        "2026-10-01 | Beta opens\n"
+        "not a row\n"
+        "11:30 AM | Staging check\n"
+        ":::\n"
+    )
+
+    result = fmt.render(source)
+
+    assert result.warnings == ('timeline row 2 needs "date | title"; shown as plain text',)
+    assert result.html == (
+        '<ol data-component="timeline">\n'
+        '<li><time datetime="2026-10-01">Oct 1, 2026</time>\n'
+        "<strong>Beta opens</strong></li>\n"
+        "</ol>\n"
+        "<p>not a row</p>\n"
+        '<ol data-component="timeline">\n'
+        "<li><time>11:30 AM</time>\n"
+        "<strong>Staging check</strong></li>\n"
+        "</ol>\n"
+    )
+    assert semantic_view(result.html).blocks == (
+        {"timeline": [{"when": "2026-10-01", "title": "Beta opens"}]},
+        {"p": "not a row"},
+        {"timeline": [{"when": "11:30 AM", "title": "Staging check"}]},
+    )
+
+
+def test_timeline_escapes_text_and_survives_the_sanitizer():
+    source = ":::timeline\n9:00 <AM> | Beta <opens> & co\n:::\n"
+
+    raw = MarkdownFormat(RecordingSanitizer()).render(source)
+    cleaned = MarkdownFormat(Nh3Sanitizer()).render(source)
+
+    assert raw.warnings == ()
+    assert "<time>9:00 &lt;AM&gt;</time>" in raw.html
+    assert "<strong>Beta &lt;opens&gt; &amp; co</strong>" in raw.html
+    assert "<AM>" not in cleaned.html
+    assert 'data-component="timeline"' in cleaned.html
+    assert semantic_view(cleaned.html).blocks == (
+        {"timeline": [{"when": "9:00 <AM>", "title": "Beta <opens> & co"}]},
+    )
+
+
+def test_timeline_does_not_swallow_the_following_heading():
+    fmt, _sanitizer = _format()
+    source = ":::timeline\n2026-10-01 | Beta opens | done\n:::\n\n## After\n"
+
+    result = fmt.render(source)
+
+    assert result.warnings == ()
+    assert "<h2>After</h2>" in result.html
+    assert fmt.headings(source) == (Heading(2, "After", 4),)
+    assert fmt.headings(":::timeline\n## Inside\n:::\n") == ()
+
+
+def test_timeline_inside_a_quote_keeps_the_milestone_text():
+    fmt, _sanitizer = _format()
+
+    result = fmt.render("> :::timeline\n> 9:00 AM | Staging check\n> :::\n")
+
+    assert result.warnings == ()
+    assert "<blockquote>" in result.html
+    assert "<li><time>9:00 AM</time>\n<strong>Staging check</strong></li>" in result.html
+    assert "&gt;" not in result.html
+
+
+def test_empty_timeline_is_an_empty_list():
+    fmt, _sanitizer = _format()
+
+    result = fmt.render(":::timeline\n:::\n")
+
+    assert result.warnings == ()
+    assert result.html == '<ol data-component="timeline">\n</ol>\n'
 
 
 def test_warnings_follow_the_document_and_do_not_raise():

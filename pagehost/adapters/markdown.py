@@ -1,8 +1,9 @@
-"""Markdown content format: CommonMark, GFM tables and strikethrough, two directives."""
+"""Markdown content format: CommonMark, GFM tables and strikethrough, three directives."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 import re
 from typing import Any
 from urllib.parse import urlparse
@@ -60,6 +61,16 @@ _SUPPRESS_CLOSE = frozenset({
     "bullet_list_close",
     "ordered_list_close",
 })
+_STATUS_LABELS = {
+    "done": "Done",
+    "active": "Active",
+    "at-risk": "At risk",
+    "blocked": "Blocked",
+    "planned": "Planned",
+}
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_QUOTE_ONLY = re.compile(r"\s*(?:>\s*)+")
 
 
 class MarkdownFormat:
@@ -74,7 +85,7 @@ class MarkdownFormat:
     def render(self, source: str) -> RenderedFragment:
         tokens, env = self._parse(source)
         warnings: list[str] = []
-        _rewrite(tokens, warnings)
+        _rewrite(tokens, warnings, source)
         try:
             html = self._md.renderer.render(tokens, self._md.options, env)
         except Exception as exc:
@@ -109,6 +120,7 @@ class _Parser(MarkdownIt):
         self.add_render_rule("image", _render_removed_image)
         self.use(container_plugin, "details", render=_render_details)
         self.use(container_plugin, "callout", render=_render_callout)
+        self.use(container_plugin, "timeline", render=_render_timeline)
 
     def validateLink(self, url: str) -> bool:
         # Image destinations are parsed, then dropped. Link schemes stay strict.
@@ -174,19 +186,138 @@ def _directive_title(info: str, name: str) -> str:
     return parts[1].strip()
 
 
-def _rewrite(tokens: list[Token], warnings: list[str]) -> None:
+def _render_timeline(
+    self: Any,
+    tokens: Sequence[Token],
+    idx: int,
+    _options: object,
+    _env: object,
+) -> str:
+    if tokens[idx].nesting != 1:
+        return ""
+    meta = tokens[idx].meta or {}
+    return str(meta.get("html", ""))
+
+
+def _rewrite(tokens: list[Token], warnings: list[str], source: str) -> None:
     paragraph = False
-    for token in tokens:
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token.type == "container_timeline_open":
+            close = _container_close(tokens, index)
+            token.meta = {"html": _timeline_html(_directive_body(source, token), warnings)}
+            # Drop the parsed body. Line syntax is rendered from the source, and
+            # an inline token still emits its children when it is only marked hidden.
+            del tokens[index + 1 : close]
+            paragraph = False
+            index += 1
+            continue
         if token.type in {"heading_open", "heading_close"} and token.tag == "h1":
             if token.type == "heading_open":
                 _remember(warnings, _H1_WARNING)
             token.tag = "h2"
         if token.type == "paragraph_open":
             paragraph = True
+            index += 1
             continue
         if token.type == "inline":
             _scan_inline(token, warnings, paragraph=paragraph)
         paragraph = False
+        index += 1
+
+
+def _container_close(tokens: Sequence[Token], open_at: int) -> int:
+    depth = 0
+    for index in range(open_at, len(tokens)):
+        if tokens[index].type == "container_timeline_open":
+            depth += 1
+        elif tokens[index].type == "container_timeline_close":
+            depth -= 1
+            if depth == 0:
+                return index
+    return len(tokens)
+
+
+def _directive_body(source: str, token: Token) -> list[str]:
+    if not token.map:
+        return []
+    lines = source.splitlines()
+    start, end = token.map
+    if start >= len(lines):
+        return []
+    marker = lines[start].find(":::")
+    prefix = lines[start][:marker] if marker >= 0 else ""
+    body: list[str] = []
+    for line in lines[start + 1 : end]:
+        if prefix and line.startswith(prefix):
+            line = line[len(prefix) :]
+        body.append(line)
+    return body
+
+
+def _timeline_html(lines: list[str], warnings: list[str]) -> str:
+    pieces: list[str] = []
+    items: list[str] = []
+    row = 0
+
+    def flush() -> None:
+        if items:
+            pieces.append('<ol data-component="timeline">\n' + "".join(items) + "</ol>\n")
+            items.clear()
+
+    for line in lines:
+        if not line.strip() or _QUOTE_ONLY.fullmatch(line):
+            continue
+        row += 1
+        item = _timeline_item(line.strip(), row, warnings)
+        if item is None:
+            flush()
+            pieces.append(f"<p>{escapeHtml(line.strip())}</p>\n")
+            continue
+        items.append(item)
+    flush()
+    if not pieces:
+        return '<ol data-component="timeline">\n</ol>\n'
+    return "".join(pieces)
+
+
+def _timeline_item(line: str, row: int, warnings: list[str]) -> str | None:
+    parts = [part.strip() for part in line.split("|", 2)]
+    if len(parts) < 2 or not parts[0] or not parts[1]:
+        _remember(warnings, f'timeline row {row} needs "date | title"; shown as plain text')
+        return None
+    when, title = parts[0], parts[1]
+    status = parts[2] if len(parts) == 3 else ""
+    attrs = ""
+    badge = ""
+    if status:
+        label = _STATUS_LABELS.get(status)
+        if label is None:
+            _remember(
+                warnings,
+                "timeline row "
+                f"{row}: unknown status {status!r}; use done|active|at-risk|blocked|planned",
+            )
+        else:
+            attrs = f' data-status="{status}"'
+            badge = f'<span data-role="status">{label}</span>'
+    shown = _display_date(when)
+    if shown is None:
+        time = f"<time>{escapeHtml(when)}</time>"
+    else:
+        time = f'<time datetime="{when}">{shown}</time>'
+    return f"<li{attrs}>{time}\n<strong>{escapeHtml(title)}</strong>{badge}</li>\n"
+
+
+def _display_date(value: str) -> str | None:
+    if _ISO_DATE.fullmatch(value) is None:
+        return None
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError:
+        return None
+    return f"{_MONTHS[parsed.month - 1]} {parsed.day}, {parsed.year}"
 
 
 def _scan_inline(token: Token, warnings: list[str], *, paragraph: bool) -> None:
