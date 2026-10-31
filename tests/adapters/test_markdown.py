@@ -359,7 +359,7 @@ def test_timeline_dates_statuses_and_plain_times():
 
     assert result.warnings == ()
     assert result.html == (
-        '<ol data-component="timeline">\n'
+        '<ol data-component="timeline" data-status="planned">\n'
         '<li data-status="done"><time datetime="2026-10-01">Oct 1, 2026</time>\n'
         "<strong>Beta opens</strong>"
         '<span data-role="status">Done</span></li>\n'
@@ -412,7 +412,7 @@ def test_timeline_unknown_status_is_omitted():
     assert result.warnings == (
         "timeline row 1: unknown status 'wip'; use done|active|at-risk|blocked|planned",
     )
-    assert "data-status" not in result.html
+    assert "<li data-status" not in result.html
     assert "data-role" not in result.html
     assert '<time datetime="2026-10-01">Oct 1, 2026</time>' in result.html
     assert "<strong>Beta opens</strong>" in result.html
@@ -432,12 +432,12 @@ def test_timeline_malformed_row_is_a_paragraph():
 
     assert result.warnings == ('timeline row 2 needs "date | title"; shown as plain text',)
     assert result.html == (
-        '<ol data-component="timeline">\n'
+        '<ol data-component="timeline" data-status="planned">\n'
         '<li><time datetime="2026-10-01">Oct 1, 2026</time>\n'
         "<strong>Beta opens</strong></li>\n"
         "</ol>\n"
         "<p>not a row</p>\n"
-        '<ol data-component="timeline">\n'
+        '<ol data-component="timeline" data-status="planned">\n'
         "<li><time>11:30 AM</time>\n"
         "<strong>Staging check</strong></li>\n"
         "</ol>\n"
@@ -494,7 +494,7 @@ def test_empty_timeline_is_an_empty_list():
     result = fmt.render(":::timeline\n:::\n")
 
     assert result.warnings == ()
-    assert result.html == '<ol data-component="timeline">\n</ol>\n'
+    assert result.html == '<ol data-component="timeline" data-status="planned">\n</ol>\n'
 
 
 def test_warnings_follow_the_document_and_do_not_raise():
