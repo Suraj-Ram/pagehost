@@ -256,10 +256,6 @@ def _directive_body(source: str, token: Token) -> list[str]:
     return body
 
 
-# Rows with no status inherit this marker, which is the dot the connector is drawn to meet.
-_TIMELINE_OPEN = '<ol data-component="timeline" data-status="planned">\n'
-
-
 def _timeline_html(lines: list[str], warnings: list[str]) -> str:
     pieces: list[str] = []
     items: list[str] = []
@@ -267,7 +263,7 @@ def _timeline_html(lines: list[str], warnings: list[str]) -> str:
 
     def flush() -> None:
         if items:
-            pieces.append(_TIMELINE_OPEN + "".join(items) + "</ol>\n")
+            pieces.append('<ol data-component="timeline">\n' + "".join(items) + "</ol>\n")
             items.clear()
 
     for line in lines:
@@ -282,7 +278,7 @@ def _timeline_html(lines: list[str], warnings: list[str]) -> str:
         items.append(item)
     flush()
     if not pieces:
-        return _TIMELINE_OPEN + "</ol>\n"
+        return '<ol data-component="timeline">\n</ol>\n'
     return "".join(pieces)
 
 
