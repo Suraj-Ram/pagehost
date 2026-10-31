@@ -23,6 +23,7 @@ Write the page body in Markdown. The platform adds the title (the only h1), layo
 - Start headings at `##`. Headings define sections, which tools address by id (slug of the title).
 - Supported: lists, tables, quotes, code, bold/italic/~~strike~~, links (http, https, mailto).
 - Collapsible: a line `:::details Title`, body, then a line `:::`. Note box: `:::callout Title` ... `:::`.
+- Timeline: `:::timeline`, one milestone per line `date | title | status`, then `:::`. Status is optional: `done`, `active`, `at-risk`, `blocked`, `planned`. A `YYYY-MM-DD` date is shown as a date; anything else is shown as written.
 - Not supported (removed or shown as text, with a warning): raw HTML, images, scripts, styles, forms.
 
 Tools

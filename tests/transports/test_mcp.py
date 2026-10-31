@@ -213,7 +213,7 @@ def test_tool_catalogue_matches_the_appendix(tmp_path: Path):
     assert server.name == "pagehost"
     assert tuple(tool.name for tool in tools) == _TOOLS
     assert "get_authoring_guide" not in by_name
-    assert server.instructions == _appendix_a()
+    assert server.instructions == _with_timeline(_appendix_a())
     assert len(server.instructions) < 2600
 
     descriptions = _appendix_b_descriptions()
@@ -478,12 +478,29 @@ async def _call_mcp(server, name: str, arguments: dict):
         return await client.call_tool_mcp(name, arguments)
 
 
+_TIMELINE_GUIDE = (
+    "- Timeline: `:::timeline`, one milestone per line `date | title | status`, then `:::`. "
+    "Status is optional: `done`, `active`, `at-risk`, `blocked`, `planned`. "
+    "A `YYYY-MM-DD` date is shown as a date; anything else is shown as written.\n"
+)
+
+
 def _appendix_a() -> str:
     text = _SPEC.read_text(encoding="utf-8")
     marker = "```text\n"
     start = text.index(marker) + len(marker)
     end = text.index("```", start)
     return text[start:end]
+
+
+def _with_timeline(instructions: str) -> str:
+    lines = instructions.splitlines(keepends=True)
+    out: list[str] = []
+    for line in lines:
+        out.append(line)
+        if line.startswith("- Collapsible:"):
+            out.append(_TIMELINE_GUIDE)
+    return "".join(out)
 
 
 def _appendix_b_descriptions() -> dict[str, str]:

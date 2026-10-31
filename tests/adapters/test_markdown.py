@@ -16,7 +16,12 @@ from pagehost.domain.models import Heading
 _H1 = "Level-1 headings were demoted to level 2; the page title is the h1."
 _HTML = "Raw HTML is not supported and is shown as literal text."
 _IMAGE = "Images are not supported and were removed."
-_DIRECTIVE = "Found ':::' text that is not a valid directive (supported: details, callout)."
+_DIRECTIVE = "Found ':::' text that is not a valid directive (supported: details, callout, timeline)."
+_TIMELINE_GUIDE = (
+    "- Timeline: `:::timeline`, one milestone per line `date | title | status`, then `:::`. "
+    "Status is optional: `done`, `active`, `at-risk`, `blocked`, `planned`. "
+    "A `YYYY-MM-DD` date is shown as a date; anything else is shown as written.\n"
+)
 
 
 class RecordingSanitizer:
@@ -42,6 +47,16 @@ def _guide_from_spec() -> str:
     return rest
 
 
+def _with_timeline(guide: str) -> str:
+    lines = guide.splitlines(keepends=True)
+    out: list[str] = []
+    for line in lines:
+        out.append(line)
+        if line.startswith("- Collapsible:"):
+            out.append(_TIMELINE_GUIDE)
+    return "".join(out)
+
+
 def test_clean_is_called_and_its_result_is_returned():
     class Stamp(RecordingSanitizer):
         def clean(self, html: str) -> str:
@@ -60,7 +75,7 @@ def test_authoring_guide_is_appendix_a_after_the_format_line():
     fmt, sanitizer = _format()
 
     assert fmt.name == "markdown"
-    assert fmt.authoring_guide() == _guide_from_spec()
+    assert fmt.authoring_guide() == _with_timeline(_guide_from_spec())
     assert sanitizer.calls == []
 
 
