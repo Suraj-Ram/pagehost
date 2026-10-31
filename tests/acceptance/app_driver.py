@@ -1,4 +1,4 @@
-"""Drive one scenario through the real publish path and read the served page."""
+"""The `driver` fixture. One temporary pagehost per scenario."""
 
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ from acceptance.operations import (
     ReplaceText,
     Rollback,
 )
-from acceptance.runner import Driver
 from pagehost.adapters.markdown import MarkdownFormat
 from pagehost.adapters.publisher import FilesystemPublisher
 from pagehost.adapters.sanitizer import Nh3Sanitizer
@@ -93,5 +92,3 @@ class AppDriver:
         return self._page_id
 
 
-def open_app(data_dir: Path) -> Driver:
-    return AppDriver(data_dir)
