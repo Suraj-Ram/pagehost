@@ -340,6 +340,46 @@ TIMELINE_OF_DATES_AND_TIMES = Scenario(
     ),
 )
 
+_SCHEDULE = """\
+## Timeline
+
+:::timeline
+2026-10-01 | Beta opens
+2026-11-15 | General availability
+9:00 AM | Staging check
+11:30 AM | Cutover check
+2:00 PM | Regional check
+4:45 PM | Regional cutover
+:::
+
+## After
+
+The day is still on the calendar.
+""".removesuffix("\n")
+
+TIMELINE_WITHOUT_STATUSES = Scenario(
+    name="a-timeline-without-statuses",
+    title="Launch day",
+    operations=(
+        Publish(title="Launch day", content=_SCHEDULE),
+    ),
+    blocks=(
+        {"h2": "Timeline"},
+        {
+            "timeline": [
+                {"when": "2026-10-01", "title": "Beta opens"},
+                {"when": "2026-11-15", "title": "General availability"},
+                {"when": "9:00 AM", "title": "Staging check"},
+                {"when": "11:30 AM", "title": "Cutover check"},
+                {"when": "2:00 PM", "title": "Regional check"},
+                {"when": "4:45 PM", "title": "Regional cutover"},
+            ],
+        },
+        {"h2": "After"},
+        {"p": "The day is still on the calendar."},
+    ),
+)
+
 ROLLBACK_RESTORES_AN_EARLIER_VERSION = Scenario(
     name="rollback-restores-an-earlier-version",
     title="Project plan",
