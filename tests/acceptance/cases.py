@@ -290,6 +290,56 @@ _RISKS = """\
 - Vendor delay
 """.removesuffix("\n")
 
+_LAUNCH = """\
+## Timeline
+
+:::timeline
+2026-10-01 | Beta opens | done
+2026-11-15 | General availability | active
+9:00 AM | Staging check
+11:30 AM | Cutover check
+2:00 PM | General availability
+4:45 PM | Regional cutover
+not a row
+2026-12-01 | Post-launch review | wip
+:::
+
+## After
+
+The launch is still on the calendar.
+""".removesuffix("\n")
+
+# Kept out of SCENARIOS: that tuple is checked against the build-kit reference
+# pages, and this page is not one of those renderings.
+TIMELINE_OF_DATES_AND_TIMES = Scenario(
+    name="a-timeline-of-dates-and-times",
+    title="Q4 launch status",
+    operations=(
+        Publish(title="Q4 launch status", content=_LAUNCH),
+    ),
+    blocks=(
+        {"h2": "Timeline"},
+        {
+            "timeline": [
+                {"when": "2026-10-01", "title": "Beta opens", "status": "done"},
+                {"when": "2026-11-15", "title": "General availability", "status": "active"},
+                {"when": "9:00 AM", "title": "Staging check"},
+                {"when": "11:30 AM", "title": "Cutover check"},
+                {"when": "2:00 PM", "title": "General availability"},
+                {"when": "4:45 PM", "title": "Regional cutover"},
+            ],
+        },
+        {"p": "not a row"},
+        {
+            "timeline": [
+                {"when": "2026-12-01", "title": "Post-launch review"},
+            ],
+        },
+        {"h2": "After"},
+        {"p": "The launch is still on the calendar."},
+    ),
+)
+
 ROLLBACK_RESTORES_AN_EARLIER_VERSION = Scenario(
     name="rollback-restores-an-earlier-version",
     title="Project plan",
