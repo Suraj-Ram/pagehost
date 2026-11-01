@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=9"]
+dev = ["pytest>=9", "pytest-xdist>=3"]
 
 [tool.pytest]
 minversion = "9.0"
