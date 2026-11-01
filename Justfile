@@ -1,4 +1,5 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
+set dotenv-load
 
 registry := "ghcr.io"
 image := registry + "/suraj-ram/pagehost"
@@ -40,9 +41,8 @@ build-image:
 publish-image: build-image
     #!/usr/bin/env bash
     set -euo pipefail
-    token="${GITHUB_TOKEN:-$(gh auth token)}"
-    user="${GITHUB_ACTOR:-$(gh api user --jq .login)}"
-    printf '%s' "$token" | docker login {{ registry }} --username "$user" --password-stdin
+    user="$(GH_TOKEN="$GH_PACKAGES_PAT" gh api user --jq .login)"
+    printf '%s' "$GH_PACKAGES_PAT" | docker login {{ registry }} --username "$user" --password-stdin
     docker push {{ image }}:{{ revision }}
     docker push {{ image }}:latest
 
