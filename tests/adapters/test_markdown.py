@@ -85,9 +85,10 @@ def test_level_one_headings_are_demoted_once():
     result = fmt.render("# Title\n\n# Again\n\n## Kept\n")
 
     assert "<h1" not in result.html
-    assert result.html.count("<h2>") == 3
-    assert "<h2>Title</h2>" in result.html
-    assert "<h2>Kept</h2>" in result.html
+    assert result.html.count("<h2") == 3
+    assert '<h2 id="title">Title</h2>' in result.html
+    assert '<h2 id="again">Again</h2>' in result.html
+    assert '<h2 id="kept">Kept</h2>' in result.html
     assert result.warnings == (_H1,)
     assert sanitizer.calls == [result.html]
     assert fmt.headings("# Title\n\n## Kept\n") == (
@@ -104,7 +105,7 @@ def test_setext_h1_is_demoted_in_html_and_kept_in_headings():
     result = fmt.render(source)
 
     assert "<h1" not in result.html
-    assert "<h2>Title</h2>" in result.html
+    assert '<h2 id="title">Title</h2>' in result.html
     assert result.warnings == (_H1,)
     assert fmt.headings(source) == (Heading(1, "Title", 0),)
 
@@ -186,7 +187,7 @@ def test_unclosed_directive_ends_at_the_container():
     assert "<details>" in result.html
     assert "</details>" in result.html
     assert "inside" in result.html
-    assert "<h2>After</h2>" in result.html
+    assert '<h2 id="after">After</h2>' in result.html
     assert result.warnings == ()
     assert fmt.headings(source) == (Heading(2, "After", 3),)
 
@@ -305,6 +306,36 @@ def test_compilable_garbage_does_not_raise():
 
     assert isinstance(result, type(fmt.render("")))
     assert isinstance(result.warnings, tuple)
+
+
+def test_heading_ids_match_section_ids_and_survive_the_sanitizer():
+    source = "\n".join([
+        "## Risks",
+        "",
+        "## Risks",
+        "",
+        "## Risks 2",
+        "",
+        "## Risks",
+        "",
+        "## See [docs](https://example.com)",
+        "",
+        "- # Secret",
+        "",
+        "> ## Quoted",
+        "",
+    ])
+
+    cleaned = MarkdownFormat(Nh3Sanitizer()).render(source)
+
+    assert '<h2 id="risks">Risks</h2>' in cleaned.html
+    assert '<h2 id="risks-2">Risks</h2>' in cleaned.html
+    assert '<h2 id="risks-2-2">Risks 2</h2>' in cleaned.html
+    assert '<h2 id="risks-3">Risks</h2>' in cleaned.html
+    assert '<h2 id="see-docs">' in cleaned.html
+    assert "<h2>Secret</h2>" in cleaned.html
+    assert 'id="secret"' not in cleaned.html
+    assert 'id="quoted"' not in cleaned.html
 
 
 def test_headings_examples_from_appendix_c():
@@ -487,7 +518,7 @@ def test_timeline_does_not_swallow_the_following_heading():
     result = fmt.render(source)
 
     assert result.warnings == ()
-    assert "<h2>After</h2>" in result.html
+    assert '<h2 id="after">After</h2>' in result.html
     assert fmt.headings(source) == (Heading(2, "After", 4),)
     assert fmt.headings(":::timeline\n## Inside\n:::\n") == ()
 
