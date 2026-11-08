@@ -1,4 +1,4 @@
-"""A published page always serves a table of contents.
+"""A published page serves a table of contents once it has five headings.
 
 The scenario snapshots only read `<main>`. The contents list is in the header, so this
 test fetches the served document and checks the outline itself.
@@ -23,6 +23,10 @@ A closer look.
 ## Next
 
 Ship the fix.
+
+## After
+
+What follows.
 """
 
 # `# Overview` is a markdown level-1 heading. The page title is the only h1, so the
@@ -37,6 +41,7 @@ _CONTENTS = """\
 </ul>
 </li>
 <li><a href="#next">Next</a></li>
+<li><a href="#after">After</a></li>
 </ul>
 </li>
 </ol>
@@ -52,6 +57,8 @@ _BODY = """\
 <p>A closer look.</p>
 <h2 id="next">Next</h2>
 <p>Ship the fix.</p>
+<h2 id="after">After</h2>
+<p>What follows.</p>
 """
 
 
@@ -75,3 +82,19 @@ def test_published_page_serves_a_table_of_contents(endpoint):
     assert main == _BODY
     assert "<h1" not in main
     assert 'data-component="toc"' not in main
+
+
+def test_published_page_omits_the_table_of_contents_below_five_headings(endpoint):
+    async def go():
+        async with endpoint.connect() as session:
+            page = await session.call(
+                "publish_page",
+                {"title": "Short note", "content": "\n\n".join(f"## Section {i}" for i in range(1, 5))},
+            )
+        return endpoint.fetch(page["url"])
+
+    html = asyncio.run(go())
+
+    assert 'data-component="toc"' not in html
+    assert "<h1>Short note</h1></header>" in html
+    assert html.count("<h2") == 4

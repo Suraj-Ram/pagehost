@@ -10,12 +10,18 @@ from pathlib import Path
 from pagehost.domain.models import Document, TocHeading
 
 _STYLESHEET = Path(__file__).resolve().parent.parent / "assets" / "pagehost.css"
+_MINIMUM_HEADINGS = 5
 
 
 class PagehostTheme:
     def render_document(self, document: Document) -> str:
         title = escape(document.title, quote=True)
         updated = _utc_stamp(document.updated_at)
+        contents = _table_of_contents(document.toc)
+        header = f"<header><h1>{title}</h1>"
+        if contents:
+            header += f"\n{contents}"
+        header += "</header>\n"
         return (
             "<!doctype html>\n"
             '<html lang="en">\n'
@@ -27,9 +33,7 @@ class PagehostTheme:
             '<link rel="stylesheet" href="/_assets/pagehost.css">\n'
             "</head>\n"
             "<body>\n"
-            f"<header><h1>{title}</h1>\n"
-            f"{_table_of_contents(document.toc)}"
-            "</header>\n"
+            f"{header}"
             "<main>\n"
             f"{document.body_html}\n"
             "</main>\n"
@@ -54,7 +58,10 @@ def _table_of_contents(headings: Sequence[TocHeading]) -> str:
 
     Level comes from the source (`#` is 1, `##` is 2), including a level-1
     heading the body renders as h2 because the page title is the document h1.
+    Fewer than five headings leave the list out.
     """
+    if len(headings) < _MINIMUM_HEADINGS:
+        return ""
     return (
         '<nav data-component="toc" aria-label="Contents">\n'
         '<p data-role="label">On this page</p>\n'

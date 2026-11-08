@@ -25,7 +25,7 @@ def test_title_is_escaped_in_the_title_and_the_heading():
     escaped = "Say &quot;hi&quot; &amp; &lt;b&gt;go&lt;/b&gt;"
 
     assert f"<title>{escaped}</title>" in html
-    assert f"<header><h1>{escaped}</h1>\n" in html
+    assert f"<header><h1>{escaped}</h1></header>" in html
     assert title not in html
     assert html.count("<h1>") == 1
 
@@ -85,18 +85,22 @@ def test_fragment_appears_only_inside_main():
     assert "Handbook" not in main
 
 
-def test_table_of_contents_always_renders_inside_the_header():
-    html = PagehostTheme().render_document(_document(body_html="<p>Just text</p>"))
-    before, rest = html.split("<main>\n", 1)
+def test_table_of_contents_appears_at_five_headings():
+    omitted = PagehostTheme().render_document(_document(toc=_headings(4)))
+    shown = PagehostTheme().render_document(
+        _document(body_html="<p>Just text</p>", toc=_headings(5))
+    )
+    before, rest = shown.split("<main>\n", 1)
     main, _after = rest.split("\n</main>", 1)
 
+    assert 'data-component="toc"' not in omitted
+    assert "<header><h1>Team handbook</h1></header>" in omitted
     assert '<nav data-component="toc" aria-label="Contents">' in before
-    assert '<p data-role="label">On this page</p>' in before
-    assert "<ol>\n</ol>" in before
+    assert shown.count('href="#section-') == 5
     assert "data-component" not in main
     assert main == "<p>Just text</p>"
-    assert " class=" not in html
-    assert " style=" not in html.lower()
+    assert " class=" not in shown
+    assert " style=" not in shown.lower()
 
 
 def test_table_of_contents_nests_by_markdown_level():
@@ -137,6 +141,13 @@ def test_table_of_contents_nests_by_markdown_level():
         "</ol>\n"
     )
     assert 'href="#overview"' not in html.split("<main>\n", 1)[1]
+
+
+def _headings(count: int) -> tuple[TocHeading, ...]:
+    return tuple(
+        TocHeading(f"section-{index}", 2, f"Section {index}")
+        for index in range(1, count + 1)
+    )
 
 
 def _document(

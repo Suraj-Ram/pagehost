@@ -375,7 +375,7 @@ def test_delete_section_removes_the_section_text():
     assert world.pages.get_version(published.id).summary == "delete section goals"
 
 
-def test_every_published_page_has_a_toc_nested_by_markdown_level():
+def test_five_headings_publish_a_toc_nested_by_markdown_level():
     publisher = MemoryPublisher([])
     service = PagehostService(
         pages=MemoryPages([]),
@@ -389,7 +389,7 @@ def test_every_published_page_has_a_toc_nested_by_markdown_level():
     )
     published = service.publish(
         "Launch notes",
-        "# Overview\n\nThe body.\n\n## Details\n\n### More\n\n## Next\n",
+        "# Overview\n\nThe body.\n\n## Details\n\n### More\n\n## Next\n\n## After\n",
         author="ada",
     )
     _version, html = publisher.served[published.id]
@@ -409,6 +409,7 @@ def test_every_published_page_has_a_toc_nested_by_markdown_level():
         "</ul>\n"
         "</li>\n"
         '<li><a href="#next">Next</a></li>\n'
+        '<li><a href="#after">After</a></li>\n'
         "</ul>\n"
         "</li>\n"
         "</ol>\n"
@@ -418,4 +419,14 @@ def test_every_published_page_has_a_toc_nested_by_markdown_level():
     assert '<h2 id="details">Details</h2>' in main
     assert '<h3 id="more">More</h3>' in main
     assert '<h2 id="next">Next</h2>' in main
+    assert '<h2 id="after">After</h2>' in main
     assert 'data-component="toc"' not in main
+
+    short = service.publish(
+        "Short note",
+        "# Overview\n\n## Details\n\n### More\n\n## Next\n",
+        author="ada",
+    )
+    short_html = publisher.served[short.id][1]
+    assert 'data-component="toc"' not in short_html
+    assert "<h1>Short note</h1></header>" in short_html
