@@ -27,6 +27,7 @@ from pagehost.domain.models import (
     SectionView,
     SourceView,
     StoredVersion,
+    TocHeading,
     VersionInfo,
 )
 from pagehost.domain.normalize import ensure_source_size, normalize_newlines, normalize_title
@@ -369,6 +370,7 @@ class PagehostService:
             body_html=html,
             version=stored.number,
             updated_at=stored.created_at,
+            toc=self._toc(stored),
         )
         self._publisher.publish(stored.page_id, stored.number, self._theme.render_document(document))
 
@@ -414,6 +416,15 @@ class PagehostService:
             return self._formats[name]
         except KeyError:
             raise UnknownFormat(f"unknown format {name!r}") from None
+
+    def _toc(self, stored: StoredVersion) -> tuple[TocHeading, ...]:
+        sections = self._sections(stored)
+        if not sections:
+            return ()
+        return tuple(
+            TocHeading(id=section.id, level=section.level, title=section.title)
+            for section in sections
+        )
 
     def _sections(self, stored: StoredVersion):
         fmt = self._format(stored.format)

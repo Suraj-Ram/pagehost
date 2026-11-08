@@ -62,12 +62,22 @@ class StoredVersion:
 
 
 @dataclass(frozen=True, slots=True)
+class TocHeading:
+    """One contents entry. `level` is the markdown heading level, 1 through 6."""
+
+    id: str
+    level: int
+    title: str
+
+
+@dataclass(frozen=True, slots=True)
 class Document:
     page_id: str
     title: str
     body_html: str
     version: int
     updated_at: datetime
+    toc: tuple[TocHeading, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

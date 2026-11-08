@@ -10,6 +10,9 @@ from types import SimpleNamespace
 import pytest
 
 from application.fakes import MemoryFormat, MemoryPages, MemoryPublisher, MemoryTheme, MemoryUrls, PlainFormat
+from pagehost.adapters.markdown import MarkdownFormat
+from pagehost.adapters.sanitizer import Nh3Sanitizer
+from pagehost.adapters.theme import PagehostTheme
 from pagehost.application.service import PagehostService
 from pagehost.domain.errors import (
     ContentTooLarge,
@@ -370,3 +373,49 @@ def test_delete_section_removes_the_section_text():
     assert "alpha" not in source
     assert "## Risks" in source
     assert world.pages.get_version(published.id).summary == "delete section goals"
+
+
+def test_every_published_page_has_a_toc_nested_by_markdown_level():
+    publisher = MemoryPublisher([])
+    service = PagehostService(
+        pages=MemoryPages([]),
+        publisher=publisher,
+        urls=MemoryUrls(),
+        theme=PagehostTheme(),
+        formats={"markdown": MarkdownFormat(Nh3Sanitizer())},
+        default_format="markdown",
+        max_source_bytes=1_000_000,
+        clock=_Clock(),
+    )
+    published = service.publish(
+        "Launch notes",
+        "# Overview\n\nThe body.\n\n## Details\n\n### More\n\n## Next\n",
+        author="ada",
+    )
+    _version, html = publisher.served[published.id]
+    before, rest = html.split("<main>\n", 1)
+    main, _after = rest.split("\n</main>", 1)
+
+    assert '<h1>Launch notes</h1>' in before
+    assert before.count("<h1") == 1
+    assert "<h1" not in main
+    assert (
+        '<nav data-component="toc" aria-label="Contents">\n'
+        '<p data-role="label">On this page</p>\n'
+        "<ol>\n"
+        '<li><a href="#overview">Overview</a><ul>\n'
+        '<li><a href="#details">Details</a><ul>\n'
+        '<li><a href="#more">More</a></li>\n'
+        "</ul>\n"
+        "</li>\n"
+        '<li><a href="#next">Next</a></li>\n'
+        "</ul>\n"
+        "</li>\n"
+        "</ol>\n"
+        "</nav>\n"
+    ) in before
+    assert '<h2 id="overview">Overview</h2>' in main
+    assert '<h2 id="details">Details</h2>' in main
+    assert '<h3 id="more">More</h3>' in main
+    assert '<h2 id="next">Next</h2>' in main
+    assert 'data-component="toc"' not in main

@@ -29,7 +29,7 @@ class HtmlSanitizer(Protocol):
 
 class Theme(Protocol):
     def render_document(self, document: Document) -> str:
-        """Wrap a fragment in the page shell."""
+        """Wrap a fragment in the page shell, including its table of contents."""
 
     def static_assets(self) -> dict[str, bytes]:
         """Files the document links, keyed by asset name."""

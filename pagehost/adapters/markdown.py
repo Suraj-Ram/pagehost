@@ -17,6 +17,7 @@ from mdit_py_plugins.container import container_plugin
 from pagehost.domain.errors import InvalidContent
 from pagehost.domain.models import Heading, RenderedFragment
 from pagehost.domain.ports import HtmlSanitizer
+from pagehost.domain.sections import build_sections
 
 _H1_WARNING = "Level-1 headings were demoted to level 2; the page title is the h1."
 _HTML_WARNING = "Raw HTML is not supported and is shown as literal text."
@@ -85,6 +86,9 @@ class MarkdownFormat:
 
     def render(self, source: str) -> RenderedFragment:
         tokens, env = self._parse(source)
+        # Ids follow the source heading levels. Demotion below rewrites an author
+        # h1 to h2 and must not change which section an in-page link names.
+        _assign_heading_ids(tokens)
         warnings: list[str] = []
         _rewrite(tokens, warnings, source)
         try:
@@ -350,6 +354,21 @@ def _scan_text(content: str, warnings: list[str], *, at_line_start: bool, paragr
 def _remember(warnings: list[str], message: str) -> None:
     if message not in warnings:
         warnings.append(message)
+
+
+def _assign_heading_ids(tokens: list[Token]) -> None:
+    sections = build_sections(_headings(tokens), 0)
+    depth = 0
+    index = 0
+    for token in tokens:
+        delta = _suppress_delta(token.type)
+        if delta:
+            depth = max(0, depth + delta)
+            continue
+        if depth or token.type != "heading_open":
+            continue
+        token.attrSet("id", sections[index].id)
+        index += 1
 
 
 def _headings(tokens: list[Token]) -> list[Heading]:
